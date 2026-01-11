@@ -5,17 +5,14 @@
   <title>Hospital Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- React CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <!-- React (NO Babel) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
   <style>
     body { font-family: system-ui; background:#eef2f7; margin:0; padding:20px; }
-    h1 { margin-bottom:10px; }
     .card { background:#fff; padding:16px; border-radius:14px; margin-bottom:16px; box-shadow:0 4px 12px rgba(0,0,0,.08); }
-    input, textarea { width:100%; padding:8px; margin-bottom:8px; border-radius:6px; border:1px solid #ccc; }
-    button { padding:8px 12px; border:none; border-radius:8px; background:#2563eb; color:white; margin-right:6px; cursor:pointer; }
+    button { padding:8px 12px; margin-right:6px; border:none; border-radius:8px; background:#2563eb; color:white; cursor:pointer; }
     button.red { background:#dc2626; }
     button.gray { background:#6b7280; }
   </style>
@@ -24,37 +21,34 @@
 <body>
   <div id="root"></div>
 
-  <script type="text/babel">
+  <script>
+    const e = React.createElement;
+
     function App() {
       const [status, setStatus] = React.useState("Open");
       const [clockedIn, setClockedIn] = React.useState(false);
-      const [patients, setPatients] = React.useState([]);
 
-      const addPatient = () => {
-        const name = prompt("Patient Name");
-        const notes = prompt("Clinical Notes");
-        if (!name) return;
-        setPatients([...patients, { name, notes }]);
-      };
+      return e("div", null,
+        e("h1", null, "Hospital Dashboard"),
 
-      return (
-        <div>
-          <h1>Hospital Dashboard</h1>
+        e("div", { className: "card" },
+          e("h2", null, "Building Status"),
+          e("button", { onClick: () => setStatus("Open") }, "Open"),
+          e("button", { className:"gray", onClick: () => setStatus("Closed") }, "Closed"),
+          e("button", { className:"red", onClick: () => setStatus("Lockdown") }, "Lockdown"),
+          e("p", null, "Status: ", e("b", null, status))
+        ),
 
-          <div className="card">
-            <h2>Building Status</h2>
-            <button onClick={() => setStatus("Open")}>Open</button>
-            <button className="gray" onClick={() => setStatus("Closed")}>Closed</button>
-            <button className="red" onClick={() => setStatus("Lockdown")}>Lockdown</button>
-            <p>Status: <b>{status}</b></p>
-          </div>
+        e("div", { className: "card" },
+          e("h2", null, "Staff Clock"),
+          e("button", { onClick: () => setClockedIn(!clockedIn) },
+            clockedIn ? "Clock Out" : "Clock In"
+          )
+        )
+      );
+    }
 
-          <div className="card">
-            <h2>Staff Clock</h2>
-            <button onClick={() => setClockedIn(!clockedIn)}>
-              {clockedIn ? "Clock Out" : "Clock In"}
-            </button>
-          </div>
-
-          <div className="card">
-            <h2>Patient Charts</h2>
+    ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+  </script>
+</body>
+</html>
