@@ -44,6 +44,12 @@
     padding-left:10px;
     margin-bottom:8px;
     cursor:pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chart-info {
+    flex-grow: 1;
   }
   .badge {
     display:inline-block;
@@ -74,7 +80,7 @@
 <div class="card">
   <h2>Staff Clock</h2>
   <div class="row">
-    <input id="staffName" placeholder="Staff Name" />
+    <input id="staffName" placeholder="Staff Full Name" />
     <button id="btnToggleClock">Clock In / Out</button>
   </div>
   <p><b>Currently Clocked In:</b></p>
@@ -93,25 +99,24 @@
   <h2>Active Chart</h2>
 
   <div class="row">
-    <input id="name" placeholder="Patient Name" />
-    <input id="mrn" placeholder="MRN" />
+    <input id="name" placeholder="Patient Full Name" />
+    <input id="mrn" placeholder="Medical Record Number (MRN)" />
     <input id="dob" type="date" />
   </div>
 
   <div class="row">
-    <input id="bp" placeholder="BP" />
-    <input id="hr" placeholder="HR" />
-    <input id="rr" placeholder="RR" />
-    <input id="spo2" placeholder="SpO₂" />
+    <input id="bp" placeholder="Blood Pressure (e.g., 120/80 mmHg)" />
+    <input id="hr" placeholder="Heart Rate (beats per minute)" />
+    <input id="rr" placeholder="Respiratory Rate (breaths per minute)" />
+    <input id="spo2" placeholder="Oxygen Saturation (SpO₂ %)" />
   </div>
 
-  <textarea id="complaint" placeholder="Chief Complaint"></textarea>
-  <textarea id="assessment" placeholder="Assessment"></textarea>
-  <textarea id="plan" placeholder="Plan / Orders"></textarea>
+  <textarea id="complaint" placeholder="Chief Complaint (Reason for Visit)"></textarea>
+  <textarea id="assessment" placeholder="Assessment (Diagnosis and Findings)"></textarea>
+  <textarea id="plan" placeholder="Plan / Orders (Treatment and Instructions)"></textarea>
 </div>
 
 <script>
-  // Wrap everything inside DOMContentLoaded to ensure elements exist
   document.addEventListener("DOMContentLoaded", function () {
     /* --- BUILDING STATUS --- */
     let buildingStatus = localStorage.getItem("buildingStatus") || "Open";
@@ -154,7 +159,7 @@
     function toggleClock() {
       const name = staffNameInput.value.trim();
       if (!name) {
-        alert("Please enter your staff name");
+        alert("Please enter your staff full name");
         return;
       }
       if (clockedIn.includes(name)) {
@@ -164,6 +169,7 @@
       }
       saveClock();
       renderClock();
+      staffNameInput.value = ""; // clear input after clock in/out
     }
 
     document.getElementById("btnToggleClock").addEventListener("click", toggleClock);
@@ -186,9 +192,32 @@
       charts.forEach(c => {
         const div = document.createElement("div");
         div.className = "chart";
-        div.innerHTML = `<b>${c.name || "Unnamed Patient"}</b><br>MRN: ${c.mrn || "—"}`;
-        div.style.cursor = "pointer";
-        div.onclick = () => openChart(c.id);
+
+        const info = document.createElement("div");
+        info.className = "chart-info";
+        info.innerHTML = `<b>${c.name || "Unnamed Patient"}</b><br>Medical Record Number: ${c.mrn || "—"}`;
+        info.onclick = () => openChart(c.id);
+        info.style.cursor = "pointer";
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.className = "red";
+        delBtn.onclick = (e) => {
+          e.stopPropagation(); // prevent opening chart on delete
+          if(confirm(`Delete chart for "${c.name || "Unnamed Patient"}"?`)) {
+            charts = charts.filter(chart => chart.id !== c.id);
+            saveCharts();
+            if(activeId === c.id) {
+              activeId = null;
+              editor.style.display = "none";
+            }
+            renderCharts();
+          }
+        };
+
+        div.appendChild(info);
+        div.appendChild(delBtn);
+
         chartList.appendChild(div);
       });
     }
@@ -203,6 +232,7 @@
       charts.push(chart);
       saveCharts();
       openChart(chart.id);
+      renderCharts();
     }
 
     function openChart(id) {
