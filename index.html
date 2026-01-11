@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Hospital Chart System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
   body { font-family: system-ui; background:#eef2f7; margin:0; padding:20px; }
@@ -64,9 +64,9 @@
 <!-- BUILDING STATUS -->
 <div class="card">
   <h2>Building Status</h2>
-  <button onclick="setStatus('Open')">Open</button>
-  <button class="gray" onclick="setStatus('Closed')">Closed</button>
-  <button class="red" onclick="setStatus('Lockdown')">Lockdown</button>
+  <button id="btnOpen">Open</button>
+  <button id="btnClosed" class="gray">Closed</button>
+  <button id="btnLockdown" class="red">Lockdown</button>
   <p>Status: <b id="statusText"></b></p>
 </div>
 
@@ -74,8 +74,8 @@
 <div class="card">
   <h2>Staff Clock</h2>
   <div class="row">
-    <input id="staffName" placeholder="Staff Name">
-    <button onclick="toggleClock()">Clock In / Out</button>
+    <input id="staffName" placeholder="Staff Name" />
+    <button id="btnToggleClock">Clock In / Out</button>
   </div>
   <p><b>Currently Clocked In:</b></p>
   <ul id="clockedList"></ul>
@@ -84,4 +84,150 @@
 <!-- PATIENT CHARTS -->
 <div class="card">
   <h2>Patient Charts</h2>
-  <button onclick="newChart()">New Chart</button>
+  <button id="btnNewChart">New Chart</button>
+  <div id="chartList"></div>
+</div>
+
+<!-- CHART EDITOR -->
+<div class="card" id="editor" style="display:none">
+  <h2>Active Chart</h2>
+
+  <div class="row">
+    <input id="name" placeholder="Patient Name" />
+    <input id="mrn" placeholder="MRN" />
+    <input id="dob" type="date" />
+  </div>
+
+  <div class="row">
+    <input id="bp" placeholder="BP" />
+    <input id="hr" placeholder="HR" />
+    <input id="rr" placeholder="RR" />
+    <input id="spo2" placeholder="SpO₂" />
+  </div>
+
+  <textarea id="complaint" placeholder="Chief Complaint"></textarea>
+  <textarea id="assessment" placeholder="Assessment"></textarea>
+  <textarea id="plan" placeholder="Plan / Orders"></textarea>
+</div>
+
+<script>
+  // Wrap everything inside DOMContentLoaded to ensure elements exist
+  document.addEventListener("DOMContentLoaded", function () {
+    /* --- BUILDING STATUS --- */
+    let buildingStatus = localStorage.getItem("buildingStatus") || "Open";
+    const statusText = document.getElementById("statusText");
+    statusText.textContent = buildingStatus;
+
+    function setStatus(s) {
+      buildingStatus = s;
+      localStorage.setItem("buildingStatus", s);
+      statusText.textContent = s;
+    }
+
+    document.getElementById("btnOpen").addEventListener("click", () => setStatus("Open"));
+    document.getElementById("btnClosed").addEventListener("click", () => setStatus("Closed"));
+    document.getElementById("btnLockdown").addEventListener("click", () => setStatus("Lockdown"));
+
+    /* --- CLOCK IN / OUT --- */
+    let clockedIn = JSON.parse(localStorage.getItem("clockedIn") || "[]");
+
+    const clockedList = document.getElementById("clockedList");
+    const staffNameInput = document.getElementById("staffName");
+
+    function saveClock() {
+      localStorage.setItem("clockedIn", JSON.stringify(clockedIn));
+    }
+
+    function renderClock() {
+      clockedList.innerHTML = "";
+      clockedIn.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        const badge = document.createElement("span");
+        badge.textContent = "ON DUTY";
+        badge.className = "badge";
+        li.appendChild(badge);
+        clockedList.appendChild(li);
+      });
+    }
+
+    function toggleClock() {
+      const name = staffNameInput.value.trim();
+      if (!name) {
+        alert("Please enter your staff name");
+        return;
+      }
+      if (clockedIn.includes(name)) {
+        clockedIn = clockedIn.filter(n => n !== name);
+      } else {
+        clockedIn.push(name);
+      }
+      saveClock();
+      renderClock();
+    }
+
+    document.getElementById("btnToggleClock").addEventListener("click", toggleClock);
+
+    renderClock();
+
+    /* --- PATIENT CHARTS --- */
+    let charts = JSON.parse(localStorage.getItem("charts") || "[]");
+    let activeId = null;
+
+    const chartList = document.getElementById("chartList");
+    const editor = document.getElementById("editor");
+
+    function saveCharts() {
+      localStorage.setItem("charts", JSON.stringify(charts));
+    }
+
+    function renderCharts() {
+      chartList.innerHTML = "";
+      charts.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "chart";
+        div.innerHTML = `<b>${c.name || "Unnamed Patient"}</b><br>MRN: ${c.mrn || "—"}`;
+        div.style.cursor = "pointer";
+        div.onclick = () => openChart(c.id);
+        chartList.appendChild(div);
+      });
+    }
+
+    function newChart() {
+      const chart = {
+        id: Date.now(),
+        name:"", mrn:"", dob:"",
+        bp:"", hr:"", rr:"", spo2:"",
+        complaint:"", assessment:"", plan:""
+      };
+      charts.push(chart);
+      saveCharts();
+      openChart(chart.id);
+    }
+
+    function openChart(id) {
+      activeId = id;
+      const c = charts.find(x => x.id === id);
+      editor.style.display = "block";
+
+      // Set values and attach input handlers
+      ['name','mrn','dob','bp','hr','rr','spo2','complaint','assessment','plan'].forEach(field => {
+        const el = document.getElementById(field);
+        if (!el) return;
+        el.value = c[field];
+        el.oninput = e => {
+          c[field] = e.target.value;
+          saveCharts();
+          renderCharts();
+        };
+      });
+    }
+
+    document.getElementById("btnNewChart").addEventListener("click", newChart);
+
+    renderCharts();
+  });
+</script>
+
+</body>
+</html>
