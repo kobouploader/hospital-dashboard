@@ -1,34 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Hospital Chart System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>Hospital Chart System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-  <style>
-    body { font-family: system-ui; background:#eef2f7; margin:0; padding:20px; }
-    h1 { margin-bottom: 10px; }
-    .grid { display: grid; gap: 12px; }
-    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    .card { background:#fff; padding:16px; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.08); margin-bottom:16px; }
-    input, textarea { width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; }
-    textarea { min-height: 70px; }
-    button { padding:8px 12px; border:none; border-radius:8px; background:#2563eb; color:white; cursor:pointer; }
-    button.gray { background:#6b7280; }
-    button.red { background:#dc2626; }
-    .chart { border-left: 4px solid #2563eb; padding-left: 12px; margin-bottom: 12px; }
-  </style>
+<style>
+  body {
+    font-family: system-ui;
+    background: #eef2f7;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 { margin-bottom: 10px; }
+  .card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  textarea { min-height: 70px; }
+  button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+  button.gray { background: #6b7280; }
+  button.red { background: #dc2626; }
+  .chart {
+    border-left: 4px solid #2563eb;
+    padding-left: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+</style>
 </head>
 
 <body>
-  <div id="root"></div>
 
-  <script>
-    const e = React.createElement;
+<h1>Hospital Chart System</h1>
 
-    function App() {
-      const [charts, setCharts] = React.useState(() =>
-        JSON.parse(localStorage.ge
+<div class="card">
+  <h2>Building Status</h2>
+  <button onclick="setStatus('Open')">Open</button>
+  <button class="gray" onclick="setStatus('Closed')">Closed</button>
+  <button class="red" onclick="setStatus('Lockdown')">Lockdown</button>
+  <p>Status: <b id="statusText">Open</b></p>
+</div>
+
+<div class="card">
+  <h2>Patient Charts</h2>
+  <button onclick="newChart()">New Chart</button>
+  <div id="chartList"></div>
+</div>
+
+<div class="card" id="editor" style="display:none">
+  <h2>Active Chart</h2>
+
+  <div class="row">
+    <input id="name" placeholder="Patient Name">
+    <input id="mrn" placeholder="MRN">
+    <input id="dob" type="date">
+  </div>
+
+  <div class="row">
+    <input id="bp" placeholder="BP">
+    <input id="hr" placeholder="HR">
+    <input id="rr" placeholder="RR">
+    <input id="spo2" placeholder="SpO₂">
+  </div>
+
+  <textarea id="complaint" placeholder="Chief Complaint"></textarea>
+  <textarea id="assessment" placeholder="Assessment"></textarea>
+  <textarea id="plan" placeholder="Plan / Orders"></textarea>
+</div>
+
+<script>
+let charts = JSON.parse(localStorage.getItem("charts") || "[]");
+let activeId = null;
+
+function save() {
+  localStorage.setItem("charts", JSON.stringify(charts));
+}
+
+function renderList() {
+  const list = document.getElementById("chartList");
+  list.innerHTML = "";
+  charts.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "chart";
+    div.innerHTML = "<b>" + (c.name || "Unnamed Patient") + "</b><br>MRN: " + (c.mrn || "—");
+    div.onclick = () => openChart(c.id);
+    list.appendChild(div);
+  });
+}
+
+function newChart() {
+  const chart = {
+    id: Date.now(),
+    name: "", mrn: "", dob: "",
+    bp: "", hr: "", rr: "", spo2: "",
+    complaint: "", assessment: "", plan: ""
+  };
+  charts.push(chart);
+  save();
+  openChart(chart.id);
+}
+
+function openChart(id) {
+  activeId = id;
+  const c = charts.find(x => x.id === id);
+  document.getElementById("editor").style.display = "block";
+  for (let k in c) {
+    if (document.getElementById(k)) {
+      document.getElementById(k).value = c[k];
+      document.getElementById(k).oninput = e => {
+        c[k] = e.target.value;
+        save();
