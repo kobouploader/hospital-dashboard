@@ -21,7 +21,7 @@
     gap:10px;
     margin-bottom:10px;
   }
-  input, textarea {
+  input, textarea, select {
     width:100%;
     padding:8px;
     border-radius:8px;
@@ -89,6 +89,37 @@
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
   }
+
+  /* Code Alert Overlay */
+  #codeAlertOverlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right:0; bottom:0;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  #codeAlertBox {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 60px;
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    min-width: 320px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  }
+
+  /* Code Colors */
+  .code-red { background: #dc2626; }
+  .code-blue { background: #2563eb; }
+  .code-black { background: #111; }
+  .code-yellow { background: #facc15; color: black; }
+  .code-green { background: #16a34a; }
 </style>
 </head>
 
@@ -102,6 +133,23 @@
   <div class="row" style="grid-template-columns: 1fr auto;">
     <input id="notifInput" placeholder="Type notification message here..." />
     <button id="btnSendNotif">Send</button>
+  </div>
+</div>
+
+<!-- CODE ALERT SYSTEM -->
+<div class="card">
+  <h2>Send Code Alert</h2>
+  <div class="row" style="grid-template-columns: 1fr 1fr auto;">
+    <select id="codeSelect" aria-label="Select code color">
+      <option value="">-- Select Code --</option>
+      <option value="red">Code Red</option>
+      <option value="blue">Code Blue</option>
+      <option value="black">Code Black</option>
+      <option value="yellow">Code Yellow</option>
+      <option value="green">Code Green</option>
+    </select>
+    <input id="roomNumber" placeholder="Room Number" aria-label="Enter room number" />
+    <button id="btnSendCode">Alert</button>
   </div>
 </div>
 
@@ -157,6 +205,11 @@
 <!-- Notification container -->
 <div id="notificationContainer"></div>
 
+<!-- Code Alert Overlay -->
+<div id="codeAlertOverlay">
+  <div id="codeAlertBox"></div>
+</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     /* --- NOTIFICATION SYSTEM --- */
@@ -198,6 +251,59 @@
       if (e.key === "Enter") {
         btnSendNotif.click();
       }
+    });
+
+    /* --- CODE ALERT SYSTEM --- */
+    const codeSelect = document.getElementById("codeSelect");
+    const roomNumberInput = document.getElementById("roomNumber");
+    const btnSendCode = document.getElementById("btnSendCode");
+    const codeAlertOverlay = document.getElementById("codeAlertOverlay");
+    const codeAlertBox = document.getElementById("codeAlertBox");
+
+    function showCodeAlert(code, room) {
+      if (!code) return alert("Please select a code.");
+      if (!room) return alert("Please enter a room number.");
+
+      // Set alert box text
+      codeAlertBox.textContent = `${code.replace("code-", "Code ").toUpperCase()} - Room ${room}`;
+
+      // Remove any previous color classes
+      codeAlertBox.className = "";
+      // Add color class based on code
+      switch (code) {
+        case "red":
+          codeAlertBox.classList.add("code-red");
+          break;
+        case "blue":
+          codeAlertBox.classList.add("code-blue");
+          break;
+        case "black":
+          codeAlertBox.classList.add("code-black");
+          break;
+        case "yellow":
+          codeAlertBox.classList.add("code-yellow");
+          break;
+        case "green":
+          codeAlertBox.classList.add("code-green");
+          break;
+        default:
+          codeAlertBox.style.background = "#444";
+          codeAlertBox.style.color = "white";
+      }
+
+      // Show overlay
+      codeAlertOverlay.style.display = "flex";
+    }
+
+    btnSendCode.addEventListener("click", () => {
+      const selectedCode = codeSelect.value;
+      const roomNumber = roomNumberInput.value.trim();
+      showCodeAlert(selectedCode, roomNumber);
+    });
+
+    // Dismiss alert on click anywhere
+    codeAlertOverlay.addEventListener("click", () => {
+      codeAlertOverlay.style.display = "none";
     });
 
     /* --- BUILDING STATUS --- */
