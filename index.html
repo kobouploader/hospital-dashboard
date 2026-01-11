@@ -6,49 +6,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  body {
-    font-family: system-ui;
-    background: #eef2f7;
-    margin: 0;
-    padding: 20px;
-  }
+  body { font-family: system-ui; background:#eef2f7; margin:0; padding:20px; }
   h1 { margin-bottom: 10px; }
   .card {
-    background: #fff;
-    padding: 16px;
-    border-radius: 14px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    background:#fff;
+    padding:16px;
+    border-radius:14px;
+    margin-bottom:16px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
   }
   .row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 10px;
-    margin-bottom: 10px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:10px;
+    margin-bottom:10px;
   }
   input, textarea {
-    width: 100%;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
   }
-  textarea { min-height: 70px; }
+  textarea { min-height:70px; }
   button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    background: #2563eb;
-    color: white;
-    cursor: pointer;
-    margin-right: 6px;
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+    margin-right:6px;
   }
-  button.gray { background: #6b7280; }
-  button.red { background: #dc2626; }
+  button.gray { background:#6b7280; }
+  button.red { background:#dc2626; }
   .chart {
-    border-left: 4px solid #2563eb;
-    padding-left: 10px;
-    margin-bottom: 8px;
-    cursor: pointer;
+    border-left:4px solid #2563eb;
+    padding-left:10px;
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .badge {
+    display:inline-block;
+    background:#16a34a;
+    color:white;
+    padding:2px 6px;
+    border-radius:6px;
+    font-size:12px;
+    margin-left:6px;
   }
 </style>
 </head>
@@ -57,80 +61,27 @@
 
 <h1>Hospital Chart System</h1>
 
+<!-- BUILDING STATUS -->
 <div class="card">
   <h2>Building Status</h2>
   <button onclick="setStatus('Open')">Open</button>
   <button class="gray" onclick="setStatus('Closed')">Closed</button>
   <button class="red" onclick="setStatus('Lockdown')">Lockdown</button>
-  <p>Status: <b id="statusText">Open</b></p>
+  <p>Status: <b id="statusText"></b></p>
 </div>
 
+<!-- CLOCK IN / OUT -->
+<div class="card">
+  <h2>Staff Clock</h2>
+  <div class="row">
+    <input id="staffName" placeholder="Staff Name">
+    <button onclick="toggleClock()">Clock In / Out</button>
+  </div>
+  <p><b>Currently Clocked In:</b></p>
+  <ul id="clockedList"></ul>
+</div>
+
+<!-- PATIENT CHARTS -->
 <div class="card">
   <h2>Patient Charts</h2>
   <button onclick="newChart()">New Chart</button>
-  <div id="chartList"></div>
-</div>
-
-<div class="card" id="editor" style="display:none">
-  <h2>Active Chart</h2>
-
-  <div class="row">
-    <input id="name" placeholder="Patient Name">
-    <input id="mrn" placeholder="MRN">
-    <input id="dob" type="date">
-  </div>
-
-  <div class="row">
-    <input id="bp" placeholder="BP">
-    <input id="hr" placeholder="HR">
-    <input id="rr" placeholder="RR">
-    <input id="spo2" placeholder="SpO₂">
-  </div>
-
-  <textarea id="complaint" placeholder="Chief Complaint"></textarea>
-  <textarea id="assessment" placeholder="Assessment"></textarea>
-  <textarea id="plan" placeholder="Plan / Orders"></textarea>
-</div>
-
-<script>
-let charts = JSON.parse(localStorage.getItem("charts") || "[]");
-let activeId = null;
-
-function save() {
-  localStorage.setItem("charts", JSON.stringify(charts));
-}
-
-function renderList() {
-  const list = document.getElementById("chartList");
-  list.innerHTML = "";
-  charts.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "chart";
-    div.innerHTML = "<b>" + (c.name || "Unnamed Patient") + "</b><br>MRN: " + (c.mrn || "—");
-    div.onclick = () => openChart(c.id);
-    list.appendChild(div);
-  });
-}
-
-function newChart() {
-  const chart = {
-    id: Date.now(),
-    name: "", mrn: "", dob: "",
-    bp: "", hr: "", rr: "", spo2: "",
-    complaint: "", assessment: "", plan: ""
-  };
-  charts.push(chart);
-  save();
-  openChart(chart.id);
-}
-
-function openChart(id) {
-  activeId = id;
-  const c = charts.find(x => x.id === id);
-  document.getElementById("editor").style.display = "block";
-  for (let k in c) {
-    if (document.getElementById(k)) {
-      document.getElementById(k).value = c[k];
-      document.getElementById(k).oninput = e => {
-        c[k] = e.target.value;
-        save();
