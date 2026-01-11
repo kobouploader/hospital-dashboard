@@ -60,12 +60,50 @@
     font-size:12px;
     margin-left:6px;
   }
+
+  /* Notification styles */
+  #notificationContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+  }
+  .notification {
+    background: #dc2626;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-weight: 600;
+    animation: slideIn 0.3s ease forwards;
+    cursor: pointer;
+  }
+  .notification:hover {
+    opacity: 0.9;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
 </style>
 </head>
 
 <body>
 
 <h1>Hospital Chart System</h1>
+
+<!-- NOTIFICATION MESSAGE INPUT -->
+<div class="card">
+  <h2>Send Notification</h2>
+  <div class="row" style="grid-template-columns: 1fr auto;">
+    <input id="notifInput" placeholder="Type notification message here..." />
+    <button id="btnSendNotif">Send</button>
+  </div>
+</div>
 
 <!-- BUILDING STATUS -->
 <div class="card">
@@ -116,8 +154,52 @@
   <textarea id="plan" placeholder="Plan / Orders (Treatment and Instructions)"></textarea>
 </div>
 
+<!-- Notification container -->
+<div id="notificationContainer"></div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    /* --- NOTIFICATION SYSTEM --- */
+    const notifInput = document.getElementById("notifInput");
+    const btnSendNotif = document.getElementById("btnSendNotif");
+    const notificationContainer = document.getElementById("notificationContainer");
+
+    function createNotification(message) {
+      const notif = document.createElement("div");
+      notif.className = "notification";
+      notif.textContent = message;
+
+      // Remove on click
+      notif.addEventListener("click", () => {
+        notificationContainer.removeChild(notif);
+      });
+
+      notificationContainer.appendChild(notif);
+
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notificationContainer.contains(notif)) {
+          notificationContainer.removeChild(notif);
+        }
+      }, 5000);
+    }
+
+    btnSendNotif.addEventListener("click", () => {
+      const message = notifInput.value.trim();
+      if (!message) {
+        alert("Please type a notification message first.");
+        return;
+      }
+      createNotification(message);
+      notifInput.value = "";
+    });
+
+    notifInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") {
+        btnSendNotif.click();
+      }
+    });
+
     /* --- BUILDING STATUS --- */
     let buildingStatus = localStorage.getItem("buildingStatus") || "Open";
     const statusText = document.getElementById("statusText");
