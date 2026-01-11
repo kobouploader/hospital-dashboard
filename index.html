@@ -222,14 +222,12 @@
       notif.className = "notification";
       notif.textContent = message;
 
-      // Remove on click
       notif.addEventListener("click", () => {
         notificationContainer.removeChild(notif);
       });
 
       notificationContainer.appendChild(notif);
 
-      // Auto remove after 5 seconds
       setTimeout(() => {
         if (notificationContainer.contains(notif)) {
           notificationContainer.removeChild(notif);
@@ -264,8 +262,10 @@
       if (!code) return alert("Please select a code.");
       if (!room) return alert("Please enter a room number.");
 
-      // Set alert box text
-      codeAlertBox.textContent = `${code.replace("code-", "Code ").toUpperCase()} - Room ${room}`;
+      // Capitalize first letter and format text properly
+      const codeName = code.charAt(0).toUpperCase() + code.slice(1);
+
+      codeAlertBox.textContent = `${codeName} Code - Room ${room}`;
 
       // Remove any previous color classes
       codeAlertBox.className = "";
@@ -291,7 +291,6 @@
           codeAlertBox.style.color = "white";
       }
 
-      // Show overlay
       codeAlertOverlay.style.display = "flex";
     }
 
@@ -301,7 +300,6 @@
       showCodeAlert(selectedCode, roomNumber);
     });
 
-    // Dismiss alert on click anywhere
     codeAlertOverlay.addEventListener("click", () => {
       codeAlertOverlay.style.display = "none";
     });
