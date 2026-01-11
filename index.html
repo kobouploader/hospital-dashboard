@@ -212,7 +212,10 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    /* --- NOTIFICATION SYSTEM --- */
+    // --- Broadcast Channel for cross-tab sync ---
+    const bc = new BroadcastChannel("hospital-system");
+
+    // --- NOTIFICATION SYSTEM ---
     const notifInput = document.getElementById("notifInput");
     const btnSendNotif = document.getElementById("btnSendNotif");
     const notificationContainer = document.getElementById("notificationContainer");
@@ -241,6 +244,9 @@
         alert("Please type a notification message first.");
         return;
       }
+      // Send to other tabs
+      bc.postMessage({type: "notification", message});
+      // Also create locally
       createNotification(message);
       notifInput.value = "";
     });
@@ -251,25 +257,50 @@
       }
     });
 
-    /* --- CODE ALERT SYSTEM --- */
+    // Listen to BroadcastChannel messages
+    bc.onmessage = e => {
+      const data = e.data;
+      if (data.type === "notification") {
+        createNotification(data.message);
+      }
+      else if (data.type === "codeAlert") {
+        showCodeAlert(data.code, data.room, false);
+      }
+      else if (data.type === "buildingStatus") {
+        setStatus(data.status, false);
+      }
+      else if (data.type === "clockInOut") {
+        clockedIn = data.clockedIn;
+        saveClock();
+        renderClock();
+      }
+      else if (data.type === "chartsUpdate") {
+        charts = data.charts;
+        saveCharts();
+        renderCharts();
+        // If active chart closed, hide editor
+        if (!charts.find(c => c.id === activeId)) {
+          activeId = null;
+          editor.style.display = "none";
+        }
+      }
+    };
+
+    // --- CODE ALERT SYSTEM ---
     const codeSelect = document.getElementById("codeSelect");
     const roomNumberInput = document.getElementById("roomNumber");
     const btnSendCode = document.getElementById("btnSendCode");
     const codeAlertOverlay = document.getElementById("codeAlertOverlay");
     const codeAlertBox = document.getElementById("codeAlertBox");
 
-    function showCodeAlert(code, room) {
+    function showCodeAlert(code, room, broadcast=true) {
       if (!code) return alert("Please select a code.");
       if (!room) return alert("Please enter a room number.");
 
-      // Capitalize first letter and format text properly
       const codeName = code.charAt(0).toUpperCase() + code.slice(1);
-
       codeAlertBox.textContent = `${codeName} Code - Room ${room}`;
 
-      // Remove any previous color classes
       codeAlertBox.className = "";
-      // Add color class based on code
       switch (code) {
         case "red":
           codeAlertBox.classList.add("code-red");
@@ -292,6 +323,11 @@
       }
 
       codeAlertOverlay.style.display = "flex";
+
+      // Broadcast to other tabs if requested
+      if(broadcast) {
+        bc.postMessage({type:"codeAlert", code, room});
+      }
     }
 
     btnSendCode.addEventListener("click", () => {
@@ -304,22 +340,23 @@
       codeAlertOverlay.style.display = "none";
     });
 
-    /* --- BUILDING STATUS --- */
+    // --- BUILDING STATUS ---
     let buildingStatus = localStorage.getItem("buildingStatus") || "Open";
     const statusText = document.getElementById("statusText");
     statusText.textContent = buildingStatus;
 
-    function setStatus(s) {
+    function setStatus(s, broadcast=true) {
       buildingStatus = s;
       localStorage.setItem("buildingStatus", s);
       statusText.textContent = s;
+      if (broadcast) bc.postMessage({type:"buildingStatus", status: s});
     }
 
     document.getElementById("btnOpen").addEventListener("click", () => setStatus("Open"));
     document.getElementById("btnClosed").addEventListener("click", () => setStatus("Closed"));
     document.getElementById("btnLockdown").addEventListener("click", () => setStatus("Lockdown"));
 
-    /* --- CLOCK IN / OUT --- */
+    // --- CLOCK IN / OUT ---
     let clockedIn = JSON.parse(localStorage.getItem("clockedIn") || "[]");
 
     const clockedList = document.getElementById("clockedList");
@@ -355,14 +392,16 @@
       }
       saveClock();
       renderClock();
-      staffNameInput.value = ""; // clear input after clock in/out
+      staffNameInput.value = "";
+      // Broadcast updated clock state
+      bc.postMessage({type:"clockInOut", clockedIn});
     }
 
     document.getElementById("btnToggleClock").addEventListener("click", toggleClock);
 
     renderClock();
 
-    /* --- PATIENT CHARTS --- */
+    // --- PATIENT CHARTS ---
     let charts = JSON.parse(localStorage.getItem("charts") || "[]");
     let activeId = null;
 
@@ -389,10 +428,12 @@
         delBtn.textContent = "Delete";
         delBtn.className = "red";
         delBtn.onclick = (e) => {
-          e.stopPropagation(); // prevent opening chart on delete
+          e.stopPropagation();
           if(confirm(`Delete chart for "${c.name || "Unnamed Patient"}"?`)) {
             charts = charts.filter(chart => chart.id !== c.id);
             saveCharts();
+            // Broadcast update
+            bc.postMessage({type:"chartsUpdate", charts});
             if(activeId === c.id) {
               activeId = null;
               editor.style.display = "none";
@@ -417,6 +458,8 @@
       };
       charts.push(chart);
       saveCharts();
+      // Broadcast update
+      bc.postMessage({type:"chartsUpdate", charts});
       openChart(chart.id);
       renderCharts();
     }
@@ -426,7 +469,6 @@
       const c = charts.find(x => x.id === id);
       editor.style.display = "block";
 
-      // Set values and attach input handlers
       ['name','mrn','dob','bp','hr','rr','spo2','complaint','assessment','plan'].forEach(field => {
         const el = document.getElementById(field);
         if (!el) return;
@@ -434,6 +476,8 @@
         el.oninput = e => {
           c[field] = e.target.value;
           saveCharts();
+          // Broadcast update on every input (could throttle if needed)
+          bc.postMessage({type:"chartsUpdate", charts});
           renderCharts();
         };
       });
