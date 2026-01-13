@@ -11,6 +11,7 @@
       --text: #111827;
       --muted: #6b7280;
       --border: #e5e7eb;
+      --sidebar-width: 250px;
     }
 
     body {
@@ -18,87 +19,204 @@
       font-family: Arial, Helvetica, sans-serif;
       background: var(--secondary);
       color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    .container {
-      max-width: 1100px;
+    .login-box {
+      margin: auto;
+      background: var(--primary);
+      padding: 40px 30px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      max-width: 320px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button.secondary {
+      background: #6b7280;
+      margin-top: 20px;
+    }
+
+    #error {
+      margin-top: 15px;
+      color: red;
+      font-weight: 600;
+      min-height: 18px;
+    }
+
+    /* SHR Portal */
+    #shrPortal {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1200px;
       margin: 40px auto;
       background: var(--primary);
       border-radius: 8px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.05);
       padding: 30px;
+      overflow-y: auto;
+      flex-grow: 1;
     }
 
-    h1, h2, h3 { margin-top: 0; }
-    .hidden { display: none; }
-
-    input, textarea, select, button {
-      padding: 10px;
-      font-size: 14px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    textarea { resize: vertical; }
-
-    button {
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      border: none;
-    }
-
-    button.secondary { background: #6b7280; }
-    button:hover { opacity: 0.9; }
-
-    .login-box {
-      max-width: 320px;
-      margin: 100px auto;
-      text-align: center;
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    #shrPortal h1 {
+      margin-bottom: 15px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
-      margin-top: 20px;
     }
 
     .card {
-      border: 1px solid var(--border);
+      background: var(--secondary);
       border-radius: 8px;
       padding: 20px;
-      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: auto;
+      max-height: 500px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     th, td {
-      padding: 10px;
+      padding: 12px 15px;
       border-bottom: 1px solid var(--border);
       text-align: left;
     }
 
-    th { color: var(--muted); font-size: 12px; }
-
-    .note {
-      background: #f9fafb;
-      border-left: 4px solid var(--accent);
-      padding: 10px;
-      margin-bottom: 10px;
+    th {
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
       font-size: 14px;
-      white-space: pre-wrap;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
+
+    /* Notes */
+    .note {
+      background: white;
+      border-left: 5px solid var(--accent);
+      padding: 15px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Staff Info Page */
+    #staffInfo {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      background: var(--primary);
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: var(--sidebar-width);
+      background: var(--secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #sidebar h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: var(--accent);
+    }
+
+    #sidebar button {
+      background: transparent;
+      color: var(--text);
+      border: none;
+      text-align: left;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      width: 100%;
+    }
+
+    #sidebar button.active, #sidebar button:hover {
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+    }
+
+    #contentArea {
+      flex-grow: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    #contentArea h1 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: var(--accent);
+    }
+
+    #contentArea ul {
+      padding-left: 20px;
+    }
+
+    #contentArea ul li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    #contentArea a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    #contentArea a:hover {
+      text-decoration: underline;
+    }
+
+    #logoutStaff {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
   </style>
 </head>
 <body>
@@ -107,83 +225,56 @@
 <div id="login" class="login-box">
   <h1>ERLC Staff Portal</h1>
   <p>Enter PIN for SHR access, or leave blank for Staff info</p>
-  <input id="pin" type="password" placeholder="Enter PIN (SHR only)" />
-  <br /><br />
+  <input id="pin" type="password" placeholder="Enter PIN (SHR only)" autocomplete="off" />
   <button id="loginBtn">Login</button>
-  <p id="error" style="color:red;"></p>
+  <p id="error"></p>
 </div>
 
 <!-- SHR PORTAL -->
-<div id="shrPortal" class="container hidden">
+<div id="shrPortal" class="hidden" role="main" aria-label="SHR Staff Portal">
   <h1>ERLC Staff Portal - SHR Access</h1>
   <p>Access Level: <strong>Senior High Rank (SHR)</strong></p>
 
   <div class="grid">
-    <div class="card">
+    <div class="card" aria-label="Staff Roster">
       <h2>Staff Roster</h2>
-      <table id="staffTable"></table>
+      <table id="staffTable" aria-live="polite" aria-relevant="all"></table>
     </div>
 
-    <div class="card" id="editSection">
+    <div class="card" id="editSection" aria-label="Add or Edit Staff">
       <h2>Add / Edit Staff</h2>
-      <input id="sName" placeholder="Name" />
-      <input id="sRank" placeholder="Rank" />
-      <input id="sDept" placeholder="Department" />
-      <br /><br />
-      <button id="saveStaffBtn">Save Staff</button>
+      <input id="sName" placeholder="Name" aria-label="Staff Name" />
+      <input id="sRank" placeholder="Rank" aria-label="Staff Rank" />
+      <input id="sDept" placeholder="Department" aria-label="Staff Department" />
+      <button id="saveStaffBtn" aria-label="Save Staff">Save Staff</button>
     </div>
 
-    <div class="card">
+    <div class="card" aria-label="Staff Notes">
       <h2>Staff Notes</h2>
-      <select id="noteStaff"></select>
-      <br /><br />
-      <textarea id="noteText" rows="4" placeholder="Internal staff note (immutable)"></textarea>
-      <br /><br />
-      <button id="addNoteBtn">Add Note</button>
+      <select id="noteStaff" aria-label="Select Staff for Notes"></select>
+      <textarea id="noteText" rows="4" placeholder="Internal staff note (immutable)" aria-label="New Note Text"></textarea>
+      <button id="addNoteBtn" aria-label="Add Note">Add Note</button>
       <hr />
-      <div id="notes"></div>
+      <div id="notes" aria-live="polite" aria-relevant="all"></div>
     </div>
   </div>
 
-  <br />
   <button class="secondary" id="logoutBtnSHR">Logout</button>
 </div>
 
 <!-- STAFF INFO PAGE -->
-<div id="staffInfo" class="container hidden">
-  <h1>ERLC Staff Portal - Staff Info</h1>
-  <p>Welcome Staff! Here is your info to help you moderate and support the game.</p>
-
-  <div class="card">
-    <h2>Moderation Guidelines</h2>
-    <ul>
-      <li>Be respectful and professional at all times.</li>
-      <li>Follow all ERLC server rules and policies.</li>
-      <li>Use moderation commands responsibly.</li>
-      <li>Report any issues to SHR staff promptly.</li>
-    </ul>
+<div id="staffInfo" class="hidden" role="main" aria-label="Staff Information Portal">
+  <div id="sidebar" role="navigation" aria-label="Staff Information Sections">
+    <h2>Staff Info</h2>
+    <button class="active" data-section="moderation">Moderation Guidelines</button>
+    <button data-section="messages">Game Messages</button>
+    <button data-section="resources">Helpful Resources</button>
+    <button id="logoutStaff" class="secondary">Logout</button>
   </div>
 
-  <div class="card">
-    <h2>Game Messages & Announcements</h2>
-    <ul>
-      <li>Daily roll call at 8 AM server time.</li>
-      <li>Event announcements will be posted here.</li>
-      <li>Use #staff-chat for all internal communication.</li>
-    </ul>
+  <div id="contentArea" tabindex="0">
+    <!-- Content will be loaded here -->
   </div>
-
-  <div class="card">
-    <h2>Helpful Resources</h2>
-    <ul>
-      <li><a href="https://erlc.example.com/rules" target="_blank" rel="noopener">Server Rules</a></li>
-      <li><a href="https://erlc.example.com/mod-tools" target="_blank" rel="noopener">Moderator Tools Guide</a></li>
-      <li><a href="https://erlc.example.com/contacts" target="_blank" rel="noopener">Staff Contacts</a></li>
-    </ul>
-  </div>
-
-  <br />
-  <button class="secondary" id="logoutBtnStaff">Logout</button>
 </div>
 
 <script type="module">
@@ -197,7 +288,8 @@
     query,
     orderBy,
     addDoc,
-    serverTimestamp
+    serverTimestamp,
+    getDocs
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   // Firebase config
@@ -234,20 +326,26 @@
   const saveStaffBtn = document.getElementById("saveStaffBtn");
   const addNoteBtn = document.getElementById("addNoteBtn");
 
-  // Login handler
+  // Staff Info page elements
+  const sidebarButtons = staffInfoDiv.querySelectorAll("#sidebar button:not(#logoutStaff)");
+  const contentArea = document.getElementById("contentArea");
+  const logoutStaffBtn = document.getElementById("logoutStaff");
+
+  // Login
   document.getElementById("loginBtn").addEventListener("click", () => {
     const pin = document.getElementById("pin").value.trim();
     if (pin === SHR_PIN) {
-      // Show SHR portal
+      // SHR Portal
       loginDiv.classList.add("hidden");
       shrPortalDiv.classList.remove("hidden");
       errorP.textContent = "";
       listenStaff();
     } else if (pin === "") {
-      // Show Staff Info page
+      // Staff Info page
       loginDiv.classList.add("hidden");
       staffInfoDiv.classList.remove("hidden");
       errorP.textContent = "";
+      loadStaffInfoSection("moderation");
     } else {
       errorP.textContent = "Invalid PIN";
     }
@@ -257,11 +355,11 @@
   document.getElementById("logoutBtnSHR").addEventListener("click", () => {
     location.reload();
   });
-  document.getElementById("logoutBtnStaff").addEventListener("click", () => {
+  logoutStaffBtn.addEventListener("click", () => {
     location.reload();
   });
 
-  // Listen to staff collection (real-time updates)
+  // SHR Staff Functions
   function listenStaff() {
     const staffCol = collection(db, "staff");
     onSnapshot(staffCol, (snapshot) => {
@@ -284,7 +382,6 @@
     });
   }
 
-  // Save or update staff (only SHR)
   saveStaffBtn.addEventListener("click", async () => {
     const name = sNameInput.value.trim();
     const rank = sRankInput.value.trim();
@@ -305,10 +402,8 @@
     }
   });
 
-  // Load notes for selected staff
   noteStaffSelect.addEventListener("change", loadNotes);
 
-  // Listen notes real-time (detach old listener)
   let notesUnsub = null;
 
   function loadNotes() {
@@ -333,7 +428,6 @@
     });
   }
 
-  // Add new note (only SHR)
   addNoteBtn.addEventListener("click", async () => {
     const staffId = noteStaffSelect.value;
     const text = noteTextInput.value.trim();
@@ -359,7 +453,97 @@
     }
   });
 
-  // Escape HTML helper
+  // Staff Info Navigation
+  sidebarButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      sidebarButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const section = btn.getAttribute("data-section");
+      loadStaffInfoSection(section);
+    });
+  });
+
+  // Load Staff Info Sections
+  async function loadStaffInfoSection(section) {
+    if (section === "moderation") {
+      contentArea.innerHTML = `
+        <h1>Moderation Guidelines</h1>
+        <ul>
+          <li>Be respectful and professional at all times.</li>
+          <li>Follow all ERLC server rules and policies.</li>
+          <li>Use moderation commands responsibly.</li>
+          <li>Report any issues to SHR staff promptly.</li>
+          <li>Maintain impartiality and fairness when handling disputes.</li>
+          <li>Keep conversations and reports confidential.</li>
+        </ul>
+      `;
+    } else if (section === "messages") {
+      // Load game messages from Firestore dynamically
+      contentArea.innerHTML = `<h1>Game Messages</h1><p>Loading messages...</p>`;
+
+      try {
+        const msgsCol = collection(db, "gamemessages");
+        const msgsSnap = await getDocs(query(msgsCol, orderBy("timestamp", "desc")));
+        if (msgsSnap.empty) {
+          contentArea.innerHTML = "<h1>Game Messages</h1><p>No current messages.</p>";
+          return;
+        }
+
+        let html = "<h1>Game Messages</h1>";
+        msgsSnap.forEach(docSnap => {
+          const m = docSnap.data();
+          const timeStr = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleString() : "Unknown time";
+          html += `<div class="note"><strong>${escapeHtml(timeStr)}</strong><br>${escapeHtml(m.text)}</div>`;
+        });
+
+        contentArea.innerHTML = html;
+      } catch (e) {
+        contentArea.innerHTML = "<h1>Game Messages</h1><p>Error loading messages.</p>";
+      }
+    } else if (section === "resources") {
+      contentArea.innerHTML = `
+        <h1>Helpful Resources</h1>
+        <h2>Server Rules</h2>
+        <p>
+          1. Be respectful and professional.<br />
+          2. No harassment or discrimination.<br />
+          3. Follow all roleplay rules.<br />
+          4. Use moderation tools responsibly.<br />
+          5. Keep confidentiality.<br />
+        </p>
+
+        <h2>Moderator Tools Guide</h2>
+        <p>
+          - Use /mute to silence disruptive players.<br />
+          - Use /kick for repeat offenders.<br />
+          - Log incidents promptly.<br />
+          - Always explain your actions.<br />
+        </p>
+
+        <h2>Staff Contacts</h2>
+        <p>
+          For internal staff assistance, contact:<br />
+          - Chief SHR: chief@erlc (internal)<br />
+          - Deputy SHR: deputy@erlc<br />
+          - Admin: admin@erlc<br />
+        </p>
+
+        <h2>Training Materials</h2>
+        <p>
+          Training is available inside the staff portal. Check for announcements.<br />
+          Participate in regular meetings to stay updated.<br />
+        </p>
+
+        <h2>Frequently Asked Questions</h2>
+        <p><strong>Q:</strong> How do I report misconduct?<br />
+          <strong>A:</strong> Use the /report command or contact SHR staff immediately.<br /></p>
+        <p><strong>Q:</strong> What are the working hours?<br />
+          <strong>A:</strong> See the staff schedule available in your SHR portal.<br /></p>
+      `;
+    }
+  }
+
+  // Helper to escape html
   function escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
@@ -368,6 +552,8 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
 </script>
+
 </body>
 </html>
