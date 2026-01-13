@@ -1,558 +1,246 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ERLC Staff Portal - SHR & Staff Info</title>
-  <style>
-    :root {
-      --primary: #ffffff;
-      --secondary: #f4f6f8;
-      --accent: #2563eb;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --sidebar-width: 250px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ERLC Staff Info Portal</title>
+<style>
+  :root {
+    --primary: #ffffff;
+    --secondary: #f0f4f8;
+    --accent: #2563eb;
+    --text: #1e293b;
+    --sidebar-width: 280px;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--secondary);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--secondary);
-      color: var(--text);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+  #sidebar {
+    background: var(--primary);
+    width: var(--sidebar-width);
+    border-right: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+  #sidebar.hidden {
+    transform: translateX(-100%);
+  }
 
-    .login-box {
-      margin: auto;
-      background: var(--primary);
-      padding: 40px 30px;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      max-width: 320px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+  #sidebar header {
+    padding: 20px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--accent);
+    border-bottom: 1px solid #ddd;
+    user-select: none;
+  }
 
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      font-size: 16px;
-      box-sizing: border-box;
-    }
+  #sidebar nav {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
 
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background: #1d4ed8;
-    }
+  #sidebar nav button {
+    width: 100%;
+    border: none;
+    background: none;
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+  }
+  #sidebar nav button:hover,
+  #sidebar nav button.active {
+    background: var(--accent);
+    color: white;
+  }
 
-    button.secondary {
-      background: #6b7280;
-      margin-top: 20px;
-    }
+  #toggleSidebarBtn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 16px;
+    z-index: 10;
+  }
 
-    #error {
-      margin-top: 15px;
-      color: red;
-      font-weight: 600;
-      min-height: 18px;
-    }
+  main {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: var(--primary);
+  }
 
-    /* SHR Portal */
-    #shrPortal {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      max-width: 1200px;
-      margin: 40px auto;
-      background: var(--primary);
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      padding: 30px;
-      overflow-y: auto;
-      flex-grow: 1;
-    }
+  h1 {
+    margin-top: 0;
+    color: var(--accent);
+  }
 
-    #shrPortal h1 {
-      margin-bottom: 15px;
-    }
+  section {
+    max-width: 900px;
+  }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
+  /* Staff table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+  }
+  th {
+    background: var(--accent);
+    color: white;
+  }
 
-    .card {
-      background: var(--secondary);
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      overflow: auto;
-      max-height: 500px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: white;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 12px 15px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-
-    th {
-      background: var(--accent);
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    /* Notes */
-    .note {
-      background: white;
-      border-left: 5px solid var(--accent);
-      padding: 15px;
-      margin-bottom: 10px;
-      white-space: pre-wrap;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    /* Staff Info Page */
-    #staffInfo {
-      display: flex;
-      height: 100vh;
-      width: 100%;
-      background: var(--primary);
-      overflow: hidden;
-    }
-
-    #sidebar {
-      width: var(--sidebar-width);
-      background: var(--secondary);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    #sidebar h2 {
-      margin-top: 0;
-      margin-bottom: 20px;
-      color: var(--accent);
-    }
-
-    #sidebar button {
-      background: transparent;
-      color: var(--text);
-      border: none;
-      text-align: left;
-      padding: 12px 15px;
-      margin-bottom: 8px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      width: 100%;
-    }
-
-    #sidebar button.active, #sidebar button:hover {
-      background: var(--accent);
-      color: white;
-      font-weight: bold;
-    }
-
-    #contentArea {
-      flex-grow: 1;
-      padding: 30px;
-      overflow-y: auto;
-    }
-
-    #contentArea h1 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      color: var(--accent);
-    }
-
-    #contentArea ul {
-      padding-left: 20px;
-    }
-
-    #contentArea ul li {
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    #contentArea a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    #contentArea a:hover {
-      text-decoration: underline;
-    }
-
-    #logoutStaff {
-      margin-top: auto;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-  </style>
+  /* Scrollbar for sidebar and main */
+  #sidebar nav::-webkit-scrollbar,
+  main::-webkit-scrollbar {
+    width: 8px;
+  }
+  #sidebar nav::-webkit-scrollbar-thumb,
+  main::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+</style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="login-box">
-  <h1>ERLC Staff Portal</h1>
-  <p>Enter PIN for SHR access, or leave blank for Staff info</p>
-  <input id="pin" type="password" placeholder="Enter PIN (SHR only)" autocomplete="off" />
-  <button id="loginBtn">Login</button>
-  <p id="error"></p>
-</div>
+<button id="toggleSidebarBtn" aria-label="Toggle Navigation">☰</button>
 
-<!-- SHR PORTAL -->
-<div id="shrPortal" class="hidden" role="main" aria-label="SHR Staff Portal">
-  <h1>ERLC Staff Portal - SHR Access</h1>
-  <p>Access Level: <strong>Senior High Rank (SHR)</strong></p>
-
-  <div class="grid">
-    <div class="card" aria-label="Staff Roster">
-      <h2>Staff Roster</h2>
-      <table id="staffTable" aria-live="polite" aria-relevant="all"></table>
-    </div>
-
-    <div class="card" id="editSection" aria-label="Add or Edit Staff">
-      <h2>Add / Edit Staff</h2>
-      <input id="sName" placeholder="Name" aria-label="Staff Name" />
-      <input id="sRank" placeholder="Rank" aria-label="Staff Rank" />
-      <input id="sDept" placeholder="Department" aria-label="Staff Department" />
-      <button id="saveStaffBtn" aria-label="Save Staff">Save Staff</button>
-    </div>
-
-    <div class="card" aria-label="Staff Notes">
-      <h2>Staff Notes</h2>
-      <select id="noteStaff" aria-label="Select Staff for Notes"></select>
-      <textarea id="noteText" rows="4" placeholder="Internal staff note (immutable)" aria-label="New Note Text"></textarea>
-      <button id="addNoteBtn" aria-label="Add Note">Add Note</button>
-      <hr />
-      <div id="notes" aria-live="polite" aria-relevant="all"></div>
-    </div>
-  </div>
-
-  <button class="secondary" id="logoutBtnSHR">Logout</button>
-</div>
-
-<!-- STAFF INFO PAGE -->
-<div id="staffInfo" class="hidden" role="main" aria-label="Staff Information Portal">
-  <div id="sidebar" role="navigation" aria-label="Staff Information Sections">
-    <h2>Staff Info</h2>
-    <button class="active" data-section="moderation">Moderation Guidelines</button>
+<aside id="sidebar" role="navigation" aria-label="Staff Information Navigation">
+  <header>Staff Info</header>
+  <nav>
+    <button class="active" data-section="roster">Staff Roster</button>
+    <button data-section="rules">Moderation Rules</button>
+    <button data-section="procedures">Procedures</button>
     <button data-section="messages">Game Messages</button>
-    <button data-section="resources">Helpful Resources</button>
-    <button id="logoutStaff" class="secondary">Logout</button>
-  </div>
+    <button data-section="notes">Staff Notes</button>
+  </nav>
+</aside>
 
-  <div id="contentArea" tabindex="0">
-    <!-- Content will be loaded here -->
-  </div>
-</div>
+<main tabindex="0" aria-live="polite" aria-atomic="true" id="contentArea">
+  <!-- Content loads here -->
+</main>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    doc,
-    setDoc,
-    onSnapshot,
-    query,
-    orderBy,
-    addDoc,
-    serverTimestamp,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyA5s6vN8eoHkRVhYf_D-MXHpIthmaQEzCc",
-    authDomain: "msrp-staff-portal.firebaseapp.com",
-    projectId: "msrp-staff-portal",
-    storageBucket: "msrp-staff-portal.appspot.com",
-    messagingSenderId: "876277274870",
-    appId: "1:876277274870:web:41718250817b0bbf9c74d7"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const SHR_PIN = "3884";
-
-  // Elements
-  const loginDiv = document.getElementById("login");
-  const shrPortalDiv = document.getElementById("shrPortal");
-  const staffInfoDiv = document.getElementById("staffInfo");
-  const errorP = document.getElementById("error");
-
-  // SHR Portal elements
-  const staffTable = document.getElementById("staffTable");
-  const noteStaffSelect = document.getElementById("noteStaff");
-  const notesDiv = document.getElementById("notes");
-
-  const sNameInput = document.getElementById("sName");
-  const sRankInput = document.getElementById("sRank");
-  const sDeptInput = document.getElementById("sDept");
-  const noteTextInput = document.getElementById("noteText");
-
-  const saveStaffBtn = document.getElementById("saveStaffBtn");
-  const addNoteBtn = document.getElementById("addNoteBtn");
-
-  // Staff Info page elements
-  const sidebarButtons = staffInfoDiv.querySelectorAll("#sidebar button:not(#logoutStaff)");
+<script>
+  const toggleBtn = document.getElementById("toggleSidebarBtn");
+  const sidebar = document.getElementById("sidebar");
+  const navButtons = sidebar.querySelectorAll("nav button");
   const contentArea = document.getElementById("contentArea");
-  const logoutStaffBtn = document.getElementById("logoutStaff");
 
-  // Login
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    const pin = document.getElementById("pin").value.trim();
-    if (pin === SHR_PIN) {
-      // SHR Portal
-      loginDiv.classList.add("hidden");
-      shrPortalDiv.classList.remove("hidden");
-      errorP.textContent = "";
-      listenStaff();
-    } else if (pin === "") {
-      // Staff Info page
-      loginDiv.classList.add("hidden");
-      staffInfoDiv.classList.remove("hidden");
-      errorP.textContent = "";
-      loadStaffInfoSection("moderation");
-    } else {
-      errorP.textContent = "Invalid PIN";
-    }
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("hidden");
   });
 
-  // Logout handlers
-  document.getElementById("logoutBtnSHR").addEventListener("click", () => {
-    location.reload();
-  });
-  logoutStaffBtn.addEventListener("click", () => {
-    location.reload();
-  });
-
-  // SHR Staff Functions
-  function listenStaff() {
-    const staffCol = collection(db, "staff");
-    onSnapshot(staffCol, (snapshot) => {
-      staffTable.innerHTML = "<tr><th>Name</th><th>Rank</th><th>Department</th></tr>";
-      noteStaffSelect.innerHTML = "";
-
-      snapshot.forEach((docSnap) => {
-        const s = docSnap.data();
-        const id = docSnap.id;
-        staffTable.innerHTML += `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.rank)}</td><td>${escapeHtml(s.dept)}</td></tr>`;
-        noteStaffSelect.innerHTML += `<option value="${id}">${escapeHtml(s.name)}</option>`;
-      });
-
-      if (noteStaffSelect.options.length > 0) {
-        noteStaffSelect.selectedIndex = 0;
-        loadNotes();
-      } else {
-        notesDiv.innerHTML = "<em>No staff selected</em>";
-      }
-    });
-  }
-
-  saveStaffBtn.addEventListener("click", async () => {
-    const name = sNameInput.value.trim();
-    const rank = sRankInput.value.trim();
-    const dept = sDeptInput.value.trim();
-
-    if (!name) {
-      alert("Name is required");
-      return;
-    }
-
-    try {
-      await setDoc(doc(db, "staff", name), { name, rank, dept });
-      sNameInput.value = "";
-      sRankInput.value = "";
-      sDeptInput.value = "";
-    } catch (error) {
-      alert("Error saving staff: " + error.message);
-    }
-  });
-
-  noteStaffSelect.addEventListener("change", loadNotes);
-
-  let notesUnsub = null;
-
-  function loadNotes() {
-    if (notesUnsub) notesUnsub();
-
-    const staffId = noteStaffSelect.value;
-    if (!staffId) {
-      notesDiv.innerHTML = "<em>Select a staff member to see notes</em>";
-      return;
-    }
-
-    const notesCol = collection(db, "notes", staffId, "entries");
-    const q = query(notesCol, orderBy("timestamp", "desc"));
-
-    notesUnsub = onSnapshot(q, (snapshot) => {
-      notesDiv.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-        const n = docSnap.data();
-        const timeStr = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Loading...";
-        notesDiv.innerHTML += `<div class="note"><strong>${escapeHtml(timeStr)}</strong><br>${escapeHtml(n.text)}</div>`;
-      });
-    });
-  }
-
-  addNoteBtn.addEventListener("click", async () => {
-    const staffId = noteStaffSelect.value;
-    const text = noteTextInput.value.trim();
-
-    if (!staffId) {
-      alert("Please select a staff member");
-      return;
-    }
-    if (!text) {
-      alert("Note text cannot be empty");
-      return;
-    }
-
-    try {
-      const notesCol = collection(db, "notes", staffId, "entries");
-      await addDoc(notesCol, {
-        text,
-        timestamp: serverTimestamp()
-      });
-      noteTextInput.value = "";
-    } catch (error) {
-      alert("Error adding note: " + error.message);
-    }
-  });
-
-  // Staff Info Navigation
-  sidebarButtons.forEach(btn => {
+  navButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      sidebarButtons.forEach(b => b.classList.remove("active"));
+      navButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      const section = btn.getAttribute("data-section");
-      loadStaffInfoSection(section);
+      loadSection(btn.dataset.section);
+      if(window.innerWidth < 700) sidebar.classList.add("hidden"); // auto hide on small screens
     });
   });
 
-  // Load Staff Info Sections
-  async function loadStaffInfoSection(section) {
-    if (section === "moderation") {
+  function loadSection(section) {
+    if (section === "roster") {
       contentArea.innerHTML = `
-        <h1>Moderation Guidelines</h1>
+        <h1>Staff Roster</h1>
+        <p>Detailed list of ERLC staff members, their ranks and departments.</p>
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Rank</th><th>Department</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Jane Doe</td><td>Senior Officer</td><td>Patrol</td><td>Active</td></tr>
+            <tr><td>John Smith</td><td>Deputy</td><td>Investigations</td><td>Active</td></tr>
+            <tr><td>Alice Johnson</td><td>Training Officer</td><td>Training</td><td>On Leave</td></tr>
+            <tr><td>Robert Brown</td><td>Captain</td><td>Command</td><td>Active</td></tr>
+            <tr><td>Emily Davis</td><td>Sergeant</td><td>Patrol</td><td>Active</td></tr>
+            <tr><td>Michael Wilson</td><td>Senior Investigator</td><td>Investigations</td><td>Active</td></tr>
+            <tr><td>Laura Martinez</td><td>HR Specialist</td><td>Human Resources</td><td>Active</td></tr>
+            <tr><td>David Lee</td><td>Lieutenant</td><td>Patrol</td><td>Active</td></tr>
+            <tr><td>Sophia Hernandez</td><td>Communications Officer</td><td>Communications</td><td>Active</td></tr>
+            <tr><td>James Clark</td><td>Deputy Chief</td><td>Command</td><td>Active</td></tr>
+          </tbody>
+        </table>
+      `;
+    } else if (section === "rules") {
+      contentArea.innerHTML = `
+        <h1>Moderation Rules</h1>
         <ul>
-          <li>Be respectful and professional at all times.</li>
-          <li>Follow all ERLC server rules and policies.</li>
-          <li>Use moderation commands responsibly.</li>
-          <li>Report any issues to SHR staff promptly.</li>
-          <li>Maintain impartiality and fairness when handling disputes.</li>
-          <li>Keep conversations and reports confidential.</li>
+          <li>Maintain professionalism and respect at all times.</li>
+          <li>No harassment, discrimination, or abuse tolerated.</li>
+          <li>Follow all ERLC server and roleplay rules.</li>
+          <li>Use moderation tools responsibly and fairly.</li>
+          <li>Document and report incidents accurately.</li>
+          <li>Keep confidential information private.</li>
+          <li>Collaborate with fellow staff for smooth operations.</li>
         </ul>
       `;
-    } else if (section === "messages") {
-      // Load game messages from Firestore dynamically
-      contentArea.innerHTML = `<h1>Game Messages</h1><p>Loading messages...</p>`;
-
-      try {
-        const msgsCol = collection(db, "gamemessages");
-        const msgsSnap = await getDocs(query(msgsCol, orderBy("timestamp", "desc")));
-        if (msgsSnap.empty) {
-          contentArea.innerHTML = "<h1>Game Messages</h1><p>No current messages.</p>";
-          return;
-        }
-
-        let html = "<h1>Game Messages</h1>";
-        msgsSnap.forEach(docSnap => {
-          const m = docSnap.data();
-          const timeStr = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleString() : "Unknown time";
-          html += `<div class="note"><strong>${escapeHtml(timeStr)}</strong><br>${escapeHtml(m.text)}</div>`;
-        });
-
-        contentArea.innerHTML = html;
-      } catch (e) {
-        contentArea.innerHTML = "<h1>Game Messages</h1><p>Error loading messages.</p>";
-      }
-    } else if (section === "resources") {
+    } else if (section === "procedures") {
       contentArea.innerHTML = `
-        <h1>Helpful Resources</h1>
-        <h2>Server Rules</h2>
-        <p>
-          1. Be respectful and professional.<br />
-          2. No harassment or discrimination.<br />
-          3. Follow all roleplay rules.<br />
-          4. Use moderation tools responsibly.<br />
-          5. Keep confidentiality.<br />
-        </p>
-
-        <h2>Moderator Tools Guide</h2>
-        <p>
-          - Use /mute to silence disruptive players.<br />
-          - Use /kick for repeat offenders.<br />
-          - Log incidents promptly.<br />
-          - Always explain your actions.<br />
-        </p>
-
-        <h2>Staff Contacts</h2>
-        <p>
-          For internal staff assistance, contact:<br />
-          - Chief SHR: chief@erlc (internal)<br />
-          - Deputy SHR: deputy@erlc<br />
-          - Admin: admin@erlc<br />
-        </p>
-
-        <h2>Training Materials</h2>
-        <p>
-          Training is available inside the staff portal. Check for announcements.<br />
-          Participate in regular meetings to stay updated.<br />
-        </p>
-
-        <h2>Frequently Asked Questions</h2>
-        <p><strong>Q:</strong> How do I report misconduct?<br />
-          <strong>A:</strong> Use the /report command or contact SHR staff immediately.<br /></p>
-        <p><strong>Q:</strong> What are the working hours?<br />
-          <strong>A:</strong> See the staff schedule available in your SHR portal.<br /></p>
+        <h1>Procedures</h1>
+        <h2>Incident Reporting</h2>
+        <p>All incidents must be reported promptly through the staff portal reporting system or direct SHR contact.</p>
+        <h2>Shift Changes</h2>
+        <p>Notify your immediate supervisor at least 24 hours before any shift changes or absences.</p>
+        <h2>Player Warnings & Bans</h2>
+        <p>Follow the tiered warning system: verbal warning, written warning, temporary ban, permanent ban.</p>
+        <h2>Communication</h2>
+        <p>Use official staff channels for all work-related communication. Keep discussions professional.</p>
       `;
+    } else if (section === "messages") {
+      contentArea.innerHTML = `
+        <h1>Game Messages</h1>
+        <ul>
+          <li><strong>[01/12/2026]</strong> Peacetime is now active. All players must comply with quiet hours.</li>
+          <li><strong>[01/10/2026]</strong> Emergency Drill scheduled for tomorrow 1800hrs.</li>
+          <li><strong>[01/08/2026]</strong> New update on vehicle policies posted.</li>
+          <li><strong>[01/05/2026]</strong> Server maintenance completed successfully.</li>
+        </ul>
+      `;
+    } else if (section === "notes") {
+      contentArea.innerHTML = `
+        <h1>Staff Notes</h1>
+        <p>Internal notes about staff performance, reminders, and other confidential info.</p>
+        <ul>
+          <li>Jane Doe: Outstanding performance in recent patrol operations.</li>
+          <li>John Smith: Needs improvement in report writing.</li>
+          <li>Alice Johnson: On leave until February 2026.</li>
+          <li>Robert Brown: Leading the new training initiative.</li>
+          <li>Emily Davis: Completed conflict resolution course.</li>
+          <li>Michael Wilson: Assigned to high-profile investigation team.</li>
+        </ul>
+      `;
+    } else {
+      contentArea.innerHTML = `<h1>Welcome to the ERLC Staff Info Portal</h1><p>Select a section from the sidebar to begin.</p>`;
     }
   }
 
-  // Helper to escape html
-  function escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
+  // Load default section
+  loadSection("roster");
 </script>
 
 </body>
