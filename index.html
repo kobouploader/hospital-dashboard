@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <title>ERLC Staff Portal - Staff & SHR Access</title>
+  <title>ERLC Staff Portal - SHR & Staff Info</title>
   <style>
     :root {
       --primary: #ffffff;
@@ -99,7 +99,6 @@
       font-size: 14px;
       white-space: pre-wrap;
     }
-
   </style>
 </head>
 <body>
@@ -107,17 +106,17 @@
 <!-- LOGIN -->
 <div id="login" class="login-box">
   <h1>ERLC Staff Portal</h1>
-  <p>Enter PIN or leave blank to view staff info only</p>
+  <p>Enter PIN for SHR access, or leave blank for Staff info</p>
   <input id="pin" type="password" placeholder="Enter PIN (SHR only)" />
-  <br><br>
+  <br /><br />
   <button id="loginBtn">Login</button>
   <p id="error" style="color:red;"></p>
 </div>
 
-<!-- PORTAL -->
-<div id="portal" class="container hidden">
-  <h1>ERLC Staff Portal</h1>
-  <p>Access Level: <strong id="accessLevelText"></strong></p>
+<!-- SHR PORTAL -->
+<div id="shrPortal" class="container hidden">
+  <h1>ERLC Staff Portal - SHR Access</h1>
+  <p>Access Level: <strong>Senior High Rank (SHR)</strong></p>
 
   <div class="grid">
     <div class="card">
@@ -130,16 +129,16 @@
       <input id="sName" placeholder="Name" />
       <input id="sRank" placeholder="Rank" />
       <input id="sDept" placeholder="Department" />
-      <br><br>
+      <br /><br />
       <button id="saveStaffBtn">Save Staff</button>
     </div>
 
     <div class="card">
       <h2>Staff Notes</h2>
       <select id="noteStaff"></select>
-      <br><br>
+      <br /><br />
       <textarea id="noteText" rows="4" placeholder="Internal staff note (immutable)"></textarea>
-      <br><br>
+      <br /><br />
       <button id="addNoteBtn">Add Note</button>
       <hr />
       <div id="notes"></div>
@@ -147,7 +146,44 @@
   </div>
 
   <br />
-  <button class="secondary" id="logoutBtn">Logout</button>
+  <button class="secondary" id="logoutBtnSHR">Logout</button>
+</div>
+
+<!-- STAFF INFO PAGE -->
+<div id="staffInfo" class="container hidden">
+  <h1>ERLC Staff Portal - Staff Info</h1>
+  <p>Welcome Staff! Here is your info to help you moderate and support the game.</p>
+
+  <div class="card">
+    <h2>Moderation Guidelines</h2>
+    <ul>
+      <li>Be respectful and professional at all times.</li>
+      <li>Follow all ERLC server rules and policies.</li>
+      <li>Use moderation commands responsibly.</li>
+      <li>Report any issues to SHR staff promptly.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Game Messages & Announcements</h2>
+    <ul>
+      <li>Daily roll call at 8 AM server time.</li>
+      <li>Event announcements will be posted here.</li>
+      <li>Use #staff-chat for all internal communication.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Helpful Resources</h2>
+    <ul>
+      <li><a href="https://erlc.example.com/rules" target="_blank" rel="noopener">Server Rules</a></li>
+      <li><a href="https://erlc.example.com/mod-tools" target="_blank" rel="noopener">Moderator Tools Guide</a></li>
+      <li><a href="https://erlc.example.com/contacts" target="_blank" rel="noopener">Staff Contacts</a></li>
+    </ul>
+  </div>
+
+  <br />
+  <button class="secondary" id="logoutBtnStaff">Logout</button>
 </div>
 
 <script type="module">
@@ -181,10 +217,11 @@
 
   // Elements
   const loginDiv = document.getElementById("login");
-  const portalDiv = document.getElementById("portal");
+  const shrPortalDiv = document.getElementById("shrPortal");
+  const staffInfoDiv = document.getElementById("staffInfo");
   const errorP = document.getElementById("error");
-  const accessLevelText = document.getElementById("accessLevelText");
 
+  // SHR Portal elements
   const staffTable = document.getElementById("staffTable");
   const noteStaffSelect = document.getElementById("noteStaff");
   const notesDiv = document.getElementById("notes");
@@ -194,63 +231,35 @@
   const sDeptInput = document.getElementById("sDept");
   const noteTextInput = document.getElementById("noteText");
 
-  const editSection = document.getElementById("editSection");
   const saveStaffBtn = document.getElementById("saveStaffBtn");
   const addNoteBtn = document.getElementById("addNoteBtn");
-
-  let currentRole = "staff"; // default is view-only staff
 
   // Login handler
   document.getElementById("loginBtn").addEventListener("click", () => {
     const pin = document.getElementById("pin").value.trim();
     if (pin === SHR_PIN) {
-      currentRole = "shr";
-      startPortal();
+      // Show SHR portal
+      loginDiv.classList.add("hidden");
+      shrPortalDiv.classList.remove("hidden");
+      errorP.textContent = "";
+      listenStaff();
     } else if (pin === "") {
-      // No pin, staff view only
-      currentRole = "staff";
-      startPortal();
+      // Show Staff Info page
+      loginDiv.classList.add("hidden");
+      staffInfoDiv.classList.remove("hidden");
+      errorP.textContent = "";
     } else {
       errorP.textContent = "Invalid PIN";
-      return;
     }
   });
 
-  // Logout handler
-  document.getElementById("logoutBtn").addEventListener("click", () => {
+  // Logout handlers
+  document.getElementById("logoutBtnSHR").addEventListener("click", () => {
     location.reload();
   });
-
-  // Initialize portal UI based on role
-  function startPortal() {
-    loginDiv.classList.add("hidden");
-    portalDiv.classList.remove("hidden");
-    errorP.textContent = "";
-
-    if (currentRole === "shr") {
-      accessLevelText.textContent = "Senior High Rank (SHR)";
-      editSection.style.display = "block";
-      sNameInput.disabled = false;
-      sRankInput.disabled = false;
-      sDeptInput.disabled = false;
-      noteStaffSelect.disabled = false;
-      noteTextInput.disabled = false;
-      saveStaffBtn.style.display = "inline-block";
-      addNoteBtn.style.display = "inline-block";
-    } else {
-      accessLevelText.textContent = "Staff (View Only)";
-      editSection.style.display = "none";
-      sNameInput.disabled = true;
-      sRankInput.disabled = true;
-      sDeptInput.disabled = true;
-      noteStaffSelect.disabled = true;
-      noteTextInput.disabled = true;
-      saveStaffBtn.style.display = "none";
-      addNoteBtn.style.display = "none";
-    }
-
-    listenStaff();
-  }
+  document.getElementById("logoutBtnStaff").addEventListener("click", () => {
+    location.reload();
+  });
 
   // Listen to staff collection (real-time updates)
   function listenStaff() {
@@ -277,8 +286,6 @@
 
   // Save or update staff (only SHR)
   saveStaffBtn.addEventListener("click", async () => {
-    if (currentRole !== "shr") return;
-
     const name = sNameInput.value.trim();
     const rank = sRankInput.value.trim();
     const dept = sDeptInput.value.trim();
@@ -301,7 +308,7 @@
   // Load notes for selected staff
   noteStaffSelect.addEventListener("change", loadNotes);
 
-  // Listen notes real-time (detached old listeners)
+  // Listen notes real-time (detach old listener)
   let notesUnsub = null;
 
   function loadNotes() {
@@ -328,8 +335,6 @@
 
   // Add new note (only SHR)
   addNoteBtn.addEventListener("click", async () => {
-    if (currentRole !== "shr") return;
-
     const staffId = noteStaffSelect.value;
     const text = noteTextInput.value.trim();
 
