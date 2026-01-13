@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ERLC Staff Portal - Modular Firebase</title>
+  <title>ERLC Staff Portal - Staff & SHR Access</title>
   <style>
     :root {
       --primary: #ffffff;
@@ -99,6 +99,7 @@
       font-size: 14px;
       white-space: pre-wrap;
     }
+
   </style>
 </head>
 <body>
@@ -106,8 +107,8 @@
 <!-- LOGIN -->
 <div id="login" class="login-box">
   <h1>ERLC Staff Portal</h1>
-  <p>SHR Secure Login</p>
-  <input id="pin" type="password" placeholder="Enter PIN" />
+  <p>Enter PIN or leave blank to view staff info only</p>
+  <input id="pin" type="password" placeholder="Enter PIN (SHR only)" />
   <br><br>
   <button id="loginBtn">Login</button>
   <p id="error" style="color:red;"></p>
@@ -116,14 +117,16 @@
 <!-- PORTAL -->
 <div id="portal" class="container hidden">
   <h1>ERLC Staff Portal</h1>
-  <p>Access Level: <strong>Senior High Rank (SHR)</strong></p>
+  <p>Access Level: <strong id="accessLevelText"></strong></p>
 
   <div class="grid">
     <div class="card">
       <h2>Staff Roster</h2>
       <table id="staffTable"></table>
-      <br>
-      <h3>Add / Edit Staff</h3>
+    </div>
+
+    <div class="card" id="editSection">
+      <h2>Add / Edit Staff</h2>
       <input id="sName" placeholder="Name" />
       <input id="sRank" placeholder="Rank" />
       <input id="sDept" placeholder="Department" />
@@ -158,10 +161,10 @@
     query,
     orderBy,
     addDoc,
-    serverTimestamp,
-    getDoc
+    serverTimestamp
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyA5s6vN8eoHkRVhYf_D-MXHpIthmaQEzCc",
     authDomain: "msrp-staff-portal.firebaseapp.com",
@@ -176,9 +179,11 @@
 
   const SHR_PIN = "3884";
 
+  // Elements
   const loginDiv = document.getElementById("login");
   const portalDiv = document.getElementById("portal");
   const errorP = document.getElementById("error");
+  const accessLevelText = document.getElementById("accessLevelText");
 
   const staffTable = document.getElementById("staffTable");
   const noteStaffSelect = document.getElementById("noteStaff");
@@ -189,24 +194,65 @@
   const sDeptInput = document.getElementById("sDept");
   const noteTextInput = document.getElementById("noteText");
 
-  // Login
+  const editSection = document.getElementById("editSection");
+  const saveStaffBtn = document.getElementById("saveStaffBtn");
+  const addNoteBtn = document.getElementById("addNoteBtn");
+
+  let currentRole = "staff"; // default is view-only staff
+
+  // Login handler
   document.getElementById("loginBtn").addEventListener("click", () => {
-    const pin = document.getElementById("pin").value;
+    const pin = document.getElementById("pin").value.trim();
     if (pin === SHR_PIN) {
-      loginDiv.classList.add("hidden");
-      portalDiv.classList.remove("hidden");
-      listenStaff();
+      currentRole = "shr";
+      startPortal();
+    } else if (pin === "") {
+      // No pin, staff view only
+      currentRole = "staff";
+      startPortal();
     } else {
       errorP.textContent = "Invalid PIN";
+      return;
     }
   });
 
-  // Logout
+  // Logout handler
   document.getElementById("logoutBtn").addEventListener("click", () => {
     location.reload();
   });
 
-  // Listen to staff collection and update UI
+  // Initialize portal UI based on role
+  function startPortal() {
+    loginDiv.classList.add("hidden");
+    portalDiv.classList.remove("hidden");
+    errorP.textContent = "";
+
+    if (currentRole === "shr") {
+      accessLevelText.textContent = "Senior High Rank (SHR)";
+      editSection.style.display = "block";
+      sNameInput.disabled = false;
+      sRankInput.disabled = false;
+      sDeptInput.disabled = false;
+      noteStaffSelect.disabled = false;
+      noteTextInput.disabled = false;
+      saveStaffBtn.style.display = "inline-block";
+      addNoteBtn.style.display = "inline-block";
+    } else {
+      accessLevelText.textContent = "Staff (View Only)";
+      editSection.style.display = "none";
+      sNameInput.disabled = true;
+      sRankInput.disabled = true;
+      sDeptInput.disabled = true;
+      noteStaffSelect.disabled = true;
+      noteTextInput.disabled = true;
+      saveStaffBtn.style.display = "none";
+      addNoteBtn.style.display = "none";
+    }
+
+    listenStaff();
+  }
+
+  // Listen to staff collection (real-time updates)
   function listenStaff() {
     const staffCol = collection(db, "staff");
     onSnapshot(staffCol, (snapshot) => {
@@ -216,16 +262,23 @@
       snapshot.forEach((docSnap) => {
         const s = docSnap.data();
         const id = docSnap.id;
-        staffTable.innerHTML += `<tr><td>${s.name}</td><td>${s.rank}</td><td>${s.dept}</td></tr>`;
-        noteStaffSelect.innerHTML += `<option value="${id}">${s.name}</option>`;
+        staffTable.innerHTML += `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.rank)}</td><td>${escapeHtml(s.dept)}</td></tr>`;
+        noteStaffSelect.innerHTML += `<option value="${id}">${escapeHtml(s.name)}</option>`;
       });
 
-      loadNotes();
+      if (noteStaffSelect.options.length > 0) {
+        noteStaffSelect.selectedIndex = 0;
+        loadNotes();
+      } else {
+        notesDiv.innerHTML = "<em>No staff selected</em>";
+      }
     });
   }
 
-  // Save or update staff
-  document.getElementById("saveStaffBtn").addEventListener("click", async () => {
+  // Save or update staff (only SHR)
+  saveStaffBtn.addEventListener("click", async () => {
+    if (currentRole !== "shr") return;
+
     const name = sNameInput.value.trim();
     const rank = sRankInput.value.trim();
     const dept = sDeptInput.value.trim();
@@ -235,17 +288,25 @@
       return;
     }
 
-    const staffDoc = doc(db, "staff", name);
-    await setDoc(staffDoc, { name, rank, dept });
-    sNameInput.value = "";
-    sRankInput.value = "";
-    sDeptInput.value = "";
+    try {
+      await setDoc(doc(db, "staff", name), { name, rank, dept });
+      sNameInput.value = "";
+      sRankInput.value = "";
+      sDeptInput.value = "";
+    } catch (error) {
+      alert("Error saving staff: " + error.message);
+    }
   });
 
   // Load notes for selected staff
   noteStaffSelect.addEventListener("change", loadNotes);
 
-  async function loadNotes() {
+  // Listen notes real-time (detached old listeners)
+  let notesUnsub = null;
+
+  function loadNotes() {
+    if (notesUnsub) notesUnsub();
+
     const staffId = noteStaffSelect.value;
     if (!staffId) {
       notesDiv.innerHTML = "<em>Select a staff member to see notes</em>";
@@ -255,22 +316,23 @@
     const notesCol = collection(db, "notes", staffId, "entries");
     const q = query(notesCol, orderBy("timestamp", "desc"));
 
-    // Detach previous listeners to avoid duplication is a more advanced topic
-    // For simplicity, here we attach a new listener every time
-    onSnapshot(q, (snapshot) => {
+    notesUnsub = onSnapshot(q, (snapshot) => {
       notesDiv.innerHTML = "";
       snapshot.forEach((docSnap) => {
         const n = docSnap.data();
         const timeStr = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Loading...";
-        notesDiv.innerHTML += `<div class="note"><strong>${timeStr}</strong><br>${escapeHtml(n.text)}</div>`;
+        notesDiv.innerHTML += `<div class="note"><strong>${escapeHtml(timeStr)}</strong><br>${escapeHtml(n.text)}</div>`;
       });
     });
   }
 
-  // Add new note
-  document.getElementById("addNoteBtn").addEventListener("click", async () => {
+  // Add new note (only SHR)
+  addNoteBtn.addEventListener("click", async () => {
+    if (currentRole !== "shr") return;
+
     const staffId = noteStaffSelect.value;
     const text = noteTextInput.value.trim();
+
     if (!staffId) {
       alert("Please select a staff member");
       return;
@@ -280,16 +342,19 @@
       return;
     }
 
-    const notesCol = collection(db, "notes", staffId, "entries");
-    await addDoc(notesCol, {
-      text,
-      timestamp: serverTimestamp()
-    });
-
-    noteTextInput.value = "";
+    try {
+      const notesCol = collection(db, "notes", staffId, "entries");
+      await addDoc(notesCol, {
+        text,
+        timestamp: serverTimestamp()
+      });
+      noteTextInput.value = "";
+    } catch (error) {
+      alert("Error adding note: " + error.message);
+    }
   });
 
-  // Helper: Escape HTML to avoid injection in notes
+  // Escape HTML helper
   function escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
