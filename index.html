@@ -1,493 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Hospital Chart System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>ERLC Staff Portal - Modular Firebase</title>
+  <style>
+    :root {
+      --primary: #ffffff;
+      --secondary: #f4f6f8;
+      --accent: #2563eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
 
-<style>
-  body { font-family: system-ui; background:#eef2f7; margin:0; padding:20px; }
-  h1 { margin-bottom: 10px; }
-  .card {
-    background:#fff;
-    padding:16px;
-    border-radius:14px;
-    margin-bottom:16px;
-    box-shadow:0 4px 12px rgba(0,0,0,.08);
-  }
-  .row {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:10px;
-    margin-bottom:10px;
-  }
-  input, textarea, select {
-    width:100%;
-    padding:8px;
-    border-radius:8px;
-    border:1px solid #ccc;
-  }
-  textarea { min-height:70px; }
-  button {
-    padding:8px 12px;
-    border:none;
-    border-radius:8px;
-    background:#2563eb;
-    color:white;
-    cursor:pointer;
-    margin-right:6px;
-  }
-  button.gray { background:#6b7280; }
-  button.red { background:#dc2626; }
-  .chart {
-    border-left:4px solid #2563eb;
-    padding-left:10px;
-    margin-bottom:8px;
-    cursor:pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .chart-info {
-    flex-grow: 1;
-  }
-  .badge {
-    display:inline-block;
-    background:#16a34a;
-    color:white;
-    padding:2px 6px;
-    border-radius:6px;
-    font-size:12px;
-    margin-left:6px;
-  }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--secondary);
+      color: var(--text);
+    }
 
-  /* Notification styles */
-  #notificationContainer {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 320px;
-  }
-  .notification {
-    background: #dc2626;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    font-weight: 600;
-    animation: slideIn 0.3s ease forwards;
-    cursor: pointer;
-  }
-  .notification:hover {
-    opacity: 0.9;
-  }
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: var(--primary);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      padding: 30px;
+    }
 
-  /* Code Alert Overlay */
-  #codeAlertOverlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right:0; bottom:0;
-    background: rgba(0,0,0,0.7);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-  }
-  #codeAlertBox {
-    background: white;
-    border-radius: 16px;
-    padding: 40px 60px;
-    text-align: center;
-    font-size: 3rem;
-    font-weight: 700;
-    color: white;
-    min-width: 320px;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-  }
+    h1, h2, h3 { margin-top: 0; }
+    .hidden { display: none; }
 
-  /* Code Colors */
-  .code-red { background: #dc2626; }
-  .code-blue { background: #2563eb; }
-  .code-black { background: #111; }
-  .code-yellow { background: #facc15; color: black; }
-  .code-green { background: #16a34a; }
-</style>
+    input, textarea, select, button {
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    textarea { resize: vertical; }
+
+    button {
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    button.secondary { background: #6b7280; }
+    button:hover { opacity: 0.9; }
+
+    .login-box {
+      max-width: 320px;
+      margin: 100px auto;
+      text-align: center;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th { color: var(--muted); font-size: 12px; }
+
+    .note {
+      background: #f9fafb;
+      border-left: 4px solid var(--accent);
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>Hospital Chart System</h1>
-
-<!-- NOTIFICATION MESSAGE INPUT -->
-<div class="card">
-  <h2>Send Notification</h2>
-  <div class="row" style="grid-template-columns: 1fr auto;">
-    <input id="notifInput" placeholder="Type notification message here..." />
-    <button id="btnSendNotif">Send</button>
-  </div>
+<!-- LOGIN -->
+<div id="login" class="login-box">
+  <h1>ERLC Staff Portal</h1>
+  <p>SHR Secure Login</p>
+  <input id="pin" type="password" placeholder="Enter PIN" />
+  <br><br>
+  <button id="loginBtn">Login</button>
+  <p id="error" style="color:red;"></p>
 </div>
 
-<!-- CODE ALERT SYSTEM -->
-<div class="card">
-  <h2>Send Code Alert</h2>
-  <div class="row" style="grid-template-columns: 1fr 1fr auto;">
-    <select id="codeSelect" aria-label="Select code color">
-      <option value="">-- Select Code --</option>
-      <option value="red">Code Red</option>
-      <option value="blue">Code Blue</option>
-      <option value="black">Code Black</option>
-      <option value="yellow">Code Yellow</option>
-      <option value="green">Code Green</option>
-    </select>
-    <input id="roomNumber" placeholder="Room Number" aria-label="Enter room number" />
-    <button id="btnSendCode">Alert</button>
-  </div>
-</div>
+<!-- PORTAL -->
+<div id="portal" class="container hidden">
+  <h1>ERLC Staff Portal</h1>
+  <p>Access Level: <strong>Senior High Rank (SHR)</strong></p>
 
-<!-- BUILDING STATUS -->
-<div class="card">
-  <h2>Building Status</h2>
-  <button id="btnOpen">Open</button>
-  <button id="btnClosed" class="gray">Closed</button>
-  <button id="btnLockdown" class="red">Lockdown</button>
-  <p>Status: <b id="statusText"></b></p>
-</div>
+  <div class="grid">
+    <div class="card">
+      <h2>Staff Roster</h2>
+      <table id="staffTable"></table>
+      <br>
+      <h3>Add / Edit Staff</h3>
+      <input id="sName" placeholder="Name" />
+      <input id="sRank" placeholder="Rank" />
+      <input id="sDept" placeholder="Department" />
+      <br><br>
+      <button id="saveStaffBtn">Save Staff</button>
+    </div>
 
-<!-- CLOCK IN / OUT -->
-<div class="card">
-  <h2>Staff Clock</h2>
-  <div class="row">
-    <input id="staffName" placeholder="Staff Full Name" />
-    <button id="btnToggleClock">Clock In / Out</button>
-  </div>
-  <p><b>Currently Clocked In:</b></p>
-  <ul id="clockedList"></ul>
-</div>
-
-<!-- PATIENT CHARTS -->
-<div class="card">
-  <h2>Patient Charts</h2>
-  <button id="btnNewChart">New Chart</button>
-  <div id="chartList"></div>
-</div>
-
-<!-- CHART EDITOR -->
-<div class="card" id="editor" style="display:none">
-  <h2>Active Chart</h2>
-
-  <div class="row">
-    <input id="name" placeholder="Patient Full Name" />
-    <input id="mrn" placeholder="Medical Record Number (MRN)" />
-    <input id="dob" type="date" />
+    <div class="card">
+      <h2>Staff Notes</h2>
+      <select id="noteStaff"></select>
+      <br><br>
+      <textarea id="noteText" rows="4" placeholder="Internal staff note (immutable)"></textarea>
+      <br><br>
+      <button id="addNoteBtn">Add Note</button>
+      <hr />
+      <div id="notes"></div>
+    </div>
   </div>
 
-  <div class="row">
-    <input id="bp" placeholder="Blood Pressure (e.g., 120/80 mmHg)" />
-    <input id="hr" placeholder="Heart Rate (beats per minute)" />
-    <input id="rr" placeholder="Respiratory Rate (breaths per minute)" />
-    <input id="spo2" placeholder="Oxygen Saturation (SpO₂ %)" />
-  </div>
-
-  <textarea id="complaint" placeholder="Chief Complaint (Reason for Visit)"></textarea>
-  <textarea id="assessment" placeholder="Assessment (Diagnosis and Findings)"></textarea>
-  <textarea id="plan" placeholder="Plan / Orders (Treatment and Instructions)"></textarea>
+  <br />
+  <button class="secondary" id="logoutBtn">Logout</button>
 </div>
 
-<!-- Notification container -->
-<div id="notificationContainer"></div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    setDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    addDoc,
+    serverTimestamp,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<!-- Code Alert Overlay -->
-<div id="codeAlertOverlay">
-  <div id="codeAlertBox"></div>
-</div>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA5s6vN8eoHkRVhYf_D-MXHpIthmaQEzCc",
+    authDomain: "msrp-staff-portal.firebaseapp.com",
+    projectId: "msrp-staff-portal",
+    storageBucket: "msrp-staff-portal.appspot.com",
+    messagingSenderId: "876277274870",
+    appId: "1:876277274870:web:41718250817b0bbf9c74d7"
+  };
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // --- Broadcast Channel for cross-tab sync ---
-    const bc = new BroadcastChannel("hospital-system");
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    // --- NOTIFICATION SYSTEM ---
-    const notifInput = document.getElementById("notifInput");
-    const btnSendNotif = document.getElementById("btnSendNotif");
-    const notificationContainer = document.getElementById("notificationContainer");
+  const SHR_PIN = "3884";
 
-    function createNotification(message) {
-      const notif = document.createElement("div");
-      notif.className = "notification";
-      notif.textContent = message;
+  const loginDiv = document.getElementById("login");
+  const portalDiv = document.getElementById("portal");
+  const errorP = document.getElementById("error");
 
-      notif.addEventListener("click", () => {
-        notificationContainer.removeChild(notif);
-      });
+  const staffTable = document.getElementById("staffTable");
+  const noteStaffSelect = document.getElementById("noteStaff");
+  const notesDiv = document.getElementById("notes");
 
-      notificationContainer.appendChild(notif);
+  const sNameInput = document.getElementById("sName");
+  const sRankInput = document.getElementById("sRank");
+  const sDeptInput = document.getElementById("sDept");
+  const noteTextInput = document.getElementById("noteText");
 
-      setTimeout(() => {
-        if (notificationContainer.contains(notif)) {
-          notificationContainer.removeChild(notif);
-        }
-      }, 5000);
+  // Login
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    const pin = document.getElementById("pin").value;
+    if (pin === SHR_PIN) {
+      loginDiv.classList.add("hidden");
+      portalDiv.classList.remove("hidden");
+      listenStaff();
+    } else {
+      errorP.textContent = "Invalid PIN";
     }
-
-    btnSendNotif.addEventListener("click", () => {
-      const message = notifInput.value.trim();
-      if (!message) {
-        alert("Please type a notification message first.");
-        return;
-      }
-      // Send to other tabs
-      bc.postMessage({type: "notification", message});
-      // Also create locally
-      createNotification(message);
-      notifInput.value = "";
-    });
-
-    notifInput.addEventListener("keypress", e => {
-      if (e.key === "Enter") {
-        btnSendNotif.click();
-      }
-    });
-
-    // Listen to BroadcastChannel messages
-    bc.onmessage = e => {
-      const data = e.data;
-      if (data.type === "notification") {
-        createNotification(data.message);
-      }
-      else if (data.type === "codeAlert") {
-        showCodeAlert(data.code, data.room, false);
-      }
-      else if (data.type === "buildingStatus") {
-        setStatus(data.status, false);
-      }
-      else if (data.type === "clockInOut") {
-        clockedIn = data.clockedIn;
-        saveClock();
-        renderClock();
-      }
-      else if (data.type === "chartsUpdate") {
-        charts = data.charts;
-        saveCharts();
-        renderCharts();
-        // If active chart closed, hide editor
-        if (!charts.find(c => c.id === activeId)) {
-          activeId = null;
-          editor.style.display = "none";
-        }
-      }
-    };
-
-    // --- CODE ALERT SYSTEM ---
-    const codeSelect = document.getElementById("codeSelect");
-    const roomNumberInput = document.getElementById("roomNumber");
-    const btnSendCode = document.getElementById("btnSendCode");
-    const codeAlertOverlay = document.getElementById("codeAlertOverlay");
-    const codeAlertBox = document.getElementById("codeAlertBox");
-
-    function showCodeAlert(code, room, broadcast=true) {
-      if (!code) return alert("Please select a code.");
-      if (!room) return alert("Please enter a room number.");
-
-      const codeName = code.charAt(0).toUpperCase() + code.slice(1);
-      codeAlertBox.textContent = `${codeName} Code - Room ${room}`;
-
-      codeAlertBox.className = "";
-      switch (code) {
-        case "red":
-          codeAlertBox.classList.add("code-red");
-          break;
-        case "blue":
-          codeAlertBox.classList.add("code-blue");
-          break;
-        case "black":
-          codeAlertBox.classList.add("code-black");
-          break;
-        case "yellow":
-          codeAlertBox.classList.add("code-yellow");
-          break;
-        case "green":
-          codeAlertBox.classList.add("code-green");
-          break;
-        default:
-          codeAlertBox.style.background = "#444";
-          codeAlertBox.style.color = "white";
-      }
-
-      codeAlertOverlay.style.display = "flex";
-
-      // Broadcast to other tabs if requested
-      if(broadcast) {
-        bc.postMessage({type:"codeAlert", code, room});
-      }
-    }
-
-    btnSendCode.addEventListener("click", () => {
-      const selectedCode = codeSelect.value;
-      const roomNumber = roomNumberInput.value.trim();
-      showCodeAlert(selectedCode, roomNumber);
-    });
-
-    codeAlertOverlay.addEventListener("click", () => {
-      codeAlertOverlay.style.display = "none";
-    });
-
-    // --- BUILDING STATUS ---
-    let buildingStatus = localStorage.getItem("buildingStatus") || "Open";
-    const statusText = document.getElementById("statusText");
-    statusText.textContent = buildingStatus;
-
-    function setStatus(s, broadcast=true) {
-      buildingStatus = s;
-      localStorage.setItem("buildingStatus", s);
-      statusText.textContent = s;
-      if (broadcast) bc.postMessage({type:"buildingStatus", status: s});
-    }
-
-    document.getElementById("btnOpen").addEventListener("click", () => setStatus("Open"));
-    document.getElementById("btnClosed").addEventListener("click", () => setStatus("Closed"));
-    document.getElementById("btnLockdown").addEventListener("click", () => setStatus("Lockdown"));
-
-    // --- CLOCK IN / OUT ---
-    let clockedIn = JSON.parse(localStorage.getItem("clockedIn") || "[]");
-
-    const clockedList = document.getElementById("clockedList");
-    const staffNameInput = document.getElementById("staffName");
-
-    function saveClock() {
-      localStorage.setItem("clockedIn", JSON.stringify(clockedIn));
-    }
-
-    function renderClock() {
-      clockedList.innerHTML = "";
-      clockedIn.forEach(name => {
-        const li = document.createElement("li");
-        li.textContent = name;
-        const badge = document.createElement("span");
-        badge.textContent = "ON DUTY";
-        badge.className = "badge";
-        li.appendChild(badge);
-        clockedList.appendChild(li);
-      });
-    }
-
-    function toggleClock() {
-      const name = staffNameInput.value.trim();
-      if (!name) {
-        alert("Please enter your staff full name");
-        return;
-      }
-      if (clockedIn.includes(name)) {
-        clockedIn = clockedIn.filter(n => n !== name);
-      } else {
-        clockedIn.push(name);
-      }
-      saveClock();
-      renderClock();
-      staffNameInput.value = "";
-      // Broadcast updated clock state
-      bc.postMessage({type:"clockInOut", clockedIn});
-    }
-
-    document.getElementById("btnToggleClock").addEventListener("click", toggleClock);
-
-    renderClock();
-
-    // --- PATIENT CHARTS ---
-    let charts = JSON.parse(localStorage.getItem("charts") || "[]");
-    let activeId = null;
-
-    const chartList = document.getElementById("chartList");
-    const editor = document.getElementById("editor");
-
-    function saveCharts() {
-      localStorage.setItem("charts", JSON.stringify(charts));
-    }
-
-    function renderCharts() {
-      chartList.innerHTML = "";
-      charts.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "chart";
-
-        const info = document.createElement("div");
-        info.className = "chart-info";
-        info.innerHTML = `<b>${c.name || "Unnamed Patient"}</b><br>Medical Record Number: ${c.mrn || "—"}`;
-        info.onclick = () => openChart(c.id);
-        info.style.cursor = "pointer";
-
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.className = "red";
-        delBtn.onclick = (e) => {
-          e.stopPropagation();
-          if(confirm(`Delete chart for "${c.name || "Unnamed Patient"}"?`)) {
-            charts = charts.filter(chart => chart.id !== c.id);
-            saveCharts();
-            // Broadcast update
-            bc.postMessage({type:"chartsUpdate", charts});
-            if(activeId === c.id) {
-              activeId = null;
-              editor.style.display = "none";
-            }
-            renderCharts();
-          }
-        };
-
-        div.appendChild(info);
-        div.appendChild(delBtn);
-
-        chartList.appendChild(div);
-      });
-    }
-
-    function newChart() {
-      const chart = {
-        id: Date.now(),
-        name:"", mrn:"", dob:"",
-        bp:"", hr:"", rr:"", spo2:"",
-        complaint:"", assessment:"", plan:""
-      };
-      charts.push(chart);
-      saveCharts();
-      // Broadcast update
-      bc.postMessage({type:"chartsUpdate", charts});
-      openChart(chart.id);
-      renderCharts();
-    }
-
-    function openChart(id) {
-      activeId = id;
-      const c = charts.find(x => x.id === id);
-      editor.style.display = "block";
-
-      ['name','mrn','dob','bp','hr','rr','spo2','complaint','assessment','plan'].forEach(field => {
-        const el = document.getElementById(field);
-        if (!el) return;
-        el.value = c[field];
-        el.oninput = e => {
-          c[field] = e.target.value;
-          saveCharts();
-          // Broadcast update on every input (could throttle if needed)
-          bc.postMessage({type:"chartsUpdate", charts});
-          renderCharts();
-        };
-      });
-    }
-
-    document.getElementById("btnNewChart").addEventListener("click", newChart);
-
-    renderCharts();
   });
-</script>
 
+  // Logout
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    location.reload();
+  });
+
+  // Listen to staff collection and update UI
+  function listenStaff() {
+    const staffCol = collection(db, "staff");
+    onSnapshot(staffCol, (snapshot) => {
+      staffTable.innerHTML = "<tr><th>Name</th><th>Rank</th><th>Department</th></tr>";
+      noteStaffSelect.innerHTML = "";
+
+      snapshot.forEach((docSnap) => {
+        const s = docSnap.data();
+        const id = docSnap.id;
+        staffTable.innerHTML += `<tr><td>${s.name}</td><td>${s.rank}</td><td>${s.dept}</td></tr>`;
+        noteStaffSelect.innerHTML += `<option value="${id}">${s.name}</option>`;
+      });
+
+      loadNotes();
+    });
+  }
+
+  // Save or update staff
+  document.getElementById("saveStaffBtn").addEventListener("click", async () => {
+    const name = sNameInput.value.trim();
+    const rank = sRankInput.value.trim();
+    const dept = sDeptInput.value.trim();
+
+    if (!name) {
+      alert("Name is required");
+      return;
+    }
+
+    const staffDoc = doc(db, "staff", name);
+    await setDoc(staffDoc, { name, rank, dept });
+    sNameInput.value = "";
+    sRankInput.value = "";
+    sDeptInput.value = "";
+  });
+
+  // Load notes for selected staff
+  noteStaffSelect.addEventListener("change", loadNotes);
+
+  async function loadNotes() {
+    const staffId = noteStaffSelect.value;
+    if (!staffId) {
+      notesDiv.innerHTML = "<em>Select a staff member to see notes</em>";
+      return;
+    }
+
+    const notesCol = collection(db, "notes", staffId, "entries");
+    const q = query(notesCol, orderBy("timestamp", "desc"));
+
+    // Detach previous listeners to avoid duplication is a more advanced topic
+    // For simplicity, here we attach a new listener every time
+    onSnapshot(q, (snapshot) => {
+      notesDiv.innerHTML = "";
+      snapshot.forEach((docSnap) => {
+        const n = docSnap.data();
+        const timeStr = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Loading...";
+        notesDiv.innerHTML += `<div class="note"><strong>${timeStr}</strong><br>${escapeHtml(n.text)}</div>`;
+      });
+    });
+  }
+
+  // Add new note
+  document.getElementById("addNoteBtn").addEventListener("click", async () => {
+    const staffId = noteStaffSelect.value;
+    const text = noteTextInput.value.trim();
+    if (!staffId) {
+      alert("Please select a staff member");
+      return;
+    }
+    if (!text) {
+      alert("Note text cannot be empty");
+      return;
+    }
+
+    const notesCol = collection(db, "notes", staffId, "entries");
+    await addDoc(notesCol, {
+      text,
+      timestamp: serverTimestamp()
+    });
+
+    noteTextInput.value = "";
+  });
+
+  // Helper: Escape HTML to avoid injection in notes
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>
 </body>
 </html>
